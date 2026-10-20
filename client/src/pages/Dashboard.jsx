@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import {
   PieChart, Pie, Cell, ResponsiveContainer,
   AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid,
 } from "recharts";
 import {
-  TrendingDown, CreditCard, PiggyBank, CalendarClock, Receipt, Lightbulb, ChevronLeft, ChevronRight,
+  TrendingDown, CreditCard, PiggyBank, CalendarClock, Receipt, Lightbulb, ChevronLeft, ChevronRight, AlertCircle,
 } from "lucide-react";
 import { api } from "../api/api.js";
 import { Card } from "../components/ui/Card.jsx";
@@ -113,9 +114,10 @@ export default function Dashboard() {
           <div className="label"><CalendarClock size={15} /> Vencimientos próximos</div>
           <div className="value num">{upcomingCount}</div>
           {overdueCount > 0 && (
-            <div style={{ color: "var(--danger)", fontSize: 12.5, marginTop: 6 }}>
-              {overdueCount} {overdueCount === 1 ? "vencida" : "vencidas"}
-            </div>
+            <Link to="/deudas" className="chip danger" style={{ marginTop: 10, textDecoration: "none" }} title="Ver deudas vencidas">
+              <AlertCircle size={13} />
+              {overdueCount} {overdueCount === 1 ? "deuda vencida" : "deudas vencidas"}
+            </Link>
           )}
         </div>
         <div className="stat">
