@@ -60,18 +60,18 @@ export default function Register() {
 
           <div className="grid-2" style={{ gap: 0, gridColumnGap: 12 }}>
             <Field label="Nombre" error={errors.first_name}>
-              <input className="input" value={form.first_name} onChange={set("first_name")} placeholder="Santiago" />
+              <input className="input" value={form.first_name} onChange={set("first_name")} />
             </Field>
             <Field label="Apellido" error={errors.last_name}>
-              <input className="input" value={form.last_name} onChange={set("last_name")} placeholder="Berger" />
+              <input className="input" value={form.last_name} onChange={set("last_name")} />
             </Field>
           </div>
 
           <Field label="Usuario" error={errors.username}>
-            <input className="input" value={form.username} onChange={set("username")} placeholder="santiago" />
+            <input className="input" value={form.username} onChange={set("username")} />
           </Field>
           <Field label="Correo electrónico" error={errors.email}>
-            <input className="input" type="email" value={form.email} onChange={set("email")} placeholder="santiago@correo.com" />
+            <input className="input" type="email" value={form.email} onChange={set("email")} />
           </Field>
           <div className="grid-2" style={{ gap: 0, gridColumnGap: 12 }}>
             <Field label="Contraseña" error={errors.password}>
