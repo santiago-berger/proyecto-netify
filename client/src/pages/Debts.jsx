@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Plus, Trash2, Check, RotateCcw, CreditCard, Pencil } from "lucide-react";
-import { api } from "../api/axios.js";
+import { api } from "../api/api.js";
 import { Card } from "../components/ui/Card.jsx";
 import { Spinner } from "../components/ui/Spinner.jsx";
 import { Empty } from "../components/ui/Empty.jsx";

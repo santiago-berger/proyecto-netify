@@ -2,7 +2,7 @@ import Tesseract from "tesseract.js";
 import { parseReceipt } from "../utils/receipt.js";
 import { useEffect, useState, useRef } from "react";
 import { Plus, Pencil, Trash2, Receipt, Check, X, ScanLine } from "lucide-react";
-import { api } from "../api/axios.js";
+import { api } from "../api/api.js";
 import { Card } from "../components/ui/Card.jsx";
 import { Spinner } from "../components/ui/Spinner.jsx";
 import { Empty } from "../components/ui/Empty.jsx";

@@ -4,7 +4,7 @@ import { Sidebar } from "./Sidebar.jsx";
 import { Topbar } from "./Topbar.jsx";
 import { Welcome } from "./Welcome.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
-import { api } from "../api/axios.js";
+import { api } from "../api/api.js";
 
 export const Layout = () => {
   const [open, setOpen] = useState(false);        // drawer en mobile

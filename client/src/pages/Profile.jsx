@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Save, Camera, SlidersHorizontal, Check } from "lucide-react";
-import { api } from "../api/axios.js";
+import { api } from "../api/api.js";
 import { Card } from "../components/ui/Card.jsx";
 import { Spinner } from "../components/ui/Spinner.jsx";
 import { Field } from "../components/ui/Field.jsx";
