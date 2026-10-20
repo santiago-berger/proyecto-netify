@@ -1,7 +1,5 @@
-import Tesseract from "tesseract.js";
-import { parseReceipt } from "../utils/receipt.js";
-import { useEffect, useState, useRef } from "react";
-import { Plus, Pencil, Trash2, Receipt, Check, X, ScanLine } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Plus, Pencil, Trash2, Receipt, Check, X } from "lucide-react";
 import { api } from "../api/api.js";
 import { Card } from "../components/ui/Card.jsx";
 import { Spinner } from "../components/ui/Spinner.jsx";
@@ -27,11 +25,6 @@ export default function Expenses() {
   const [addingCat, setAddingCat] = useState(false);
   const [newCat, setNewCat] = useState({ name: "", color: PALETTE[0] });
   const [catError, setCatError] = useState("");
-
-  const receiptRef = useRef(null);
-  const [scanning, setScanning] = useState(false);
-  const [scanProgress, setScanProgress] = useState(0);
-  const [scanError, setScanError] = useState("");
 
   const load = async () => {
     const [e, c] = await Promise.all([api.get("/expenses"), api.get("/categories")]);
@@ -96,34 +89,6 @@ export default function Expenses() {
     await load();
   };
 
-  const onPickReceipt = async (e) => {
-    const file = e.target.files?.[0];
-    e.target.value = "";
-    if (!file) return;
-    setScanError("");
-    setScanning(true);
-    setScanProgress(0);
-    try {
-      const { data } = await Tesseract.recognize(file, "spa", {
-        logger: (m) => { if (m.status === "recognizing text") setScanProgress(Math.round(m.progress * 100)); },
-      });
-      const d = parseReceipt(data.text);
-      setEditing(null);
-      setForm((f) => ({
-        ...f,
-        amount: d.amount || "",
-        description: d.description || "",
-        date: d.date || todayISO(),
-        category_id: categories[0]?.id || f.category_id || "",
-      }));
-      setScanning(false);
-      setOpen(true);
-    } catch {
-      setScanning(false);
-      setScanError("No se pudo leer la imagen. Probá con una captura más nítida.");
-    }
-  };
-
   if (loading) return <Spinner />;
 
   return (
@@ -132,18 +97,11 @@ export default function Expenses() {
         title="Mis gastos"
         sub="Registrá y organizá cada gasto por categoría"
         action={
-          <div className="flex gap">
-            <button className="btn btn-ghost btn-sm" onClick={() => receiptRef.current?.click()}>
-              <ScanLine size={15} /> Escanear captura
-            </button>
-            <button className="btn btn-primary btn-sm" onClick={openNew}><Plus size={15} /> Nuevo gasto</button>
-          </div>
+          <button className="btn btn-primary btn-sm" onClick={openNew}><Plus size={15} /> Nuevo gasto</button>
         }
       >
-        {scanError && <div className="field-error" style={{ marginBottom: 12 }}>{scanError}</div>}
-
         {expenses.length === 0 ? (
-          <Empty icon={Receipt} title="Todavía no cargaste gastos" hint="Usá “Nuevo gasto” o escaneá una captura." />
+          <Empty icon={Receipt} title="Todavía no cargaste gastos" hint="Usá “Nuevo gasto” para registrar el primero." />
         ) : (
           <div style={{ overflowX: "auto" }}>
             <table className="table">
@@ -177,19 +135,6 @@ export default function Expenses() {
           </div>
         )}
       </Card>
-
-      <input ref={receiptRef} type="file" accept="image/*" style={{ display: "none" }} onChange={onPickReceipt} />
-
-      {scanning && (
-        <div className="modal-backdrop">
-          <div className="modal" style={{ textAlign: "center" }}>
-            <h3 style={{ marginBottom: 6 }}>Leyendo la captura…</h3>
-            <p className="muted" style={{ fontSize: 13, marginTop: 0 }}>Detectando monto, fecha y concepto.</p>
-            <div className="progress mt"><span style={{ width: `${scanProgress}%` }} /></div>
-            <div className="muted num mt" style={{ fontSize: 12 }}>{scanProgress}%</div>
-          </div>
-        </div>
-      )}
 
       {open && (
         <Modal title={editing ? "Editar gasto" : "Nuevo gasto"} onClose={() => setOpen(false)}>
