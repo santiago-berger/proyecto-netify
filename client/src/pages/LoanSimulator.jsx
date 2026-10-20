@@ -25,21 +25,33 @@ const calc = (capital, tna, meses) => {
 
 const uid = () => Math.random().toString(36).slice(2, 8);
 
+const LIMITS = { capital: 100000000, tna: 100, meses: 72 };
+
+// keeps an empty input editable; otherwise forces the value into [0, max]
+const clamp = (value, max) => {
+  if (value === "") return "";
+  const n = Number(value);
+  if (isNaN(n)) return 0;
+  return Math.min(Math.max(n, 0), max);
+};
+
+const clampScenario = (s) => ({ ...s, tna: clamp(s.tna, LIMITS.tna), meses: clamp(s.meses, LIMITS.meses) });
+
 const DEFAULT_SCENARIOS = [
-  { id: uid(), name: "Banco A", tna: 85, meses: 12 },
-  { id: uid(), name: "Banco B", tna: 110, meses: 12 },
-  { id: uid(), name: "Financiera", tna: 140, meses: 18 },
+  { id: uid(), name: "Banco A", tna: 60, meses: 12 },
+  { id: uid(), name: "Banco B", tna: 80, meses: 12 },
+  { id: uid(), name: "Financiera", tna: 95, meses: 18 },
 ];
 
 export default function LoanSimulator() {
   // los datos se guardan en el navegador para no perderlos al recargar
   const [capital, setCapital] = useState(() => {
     const g = localStorage.getItem("simulador_capital");
-    return g ? Number(g) : 500000;
+    return g ? clamp(g, LIMITS.capital) : 500000;
   });
   const [scenarios, setScenarios] = useState(() => {
     const g = localStorage.getItem("simulador_escenarios");
-    return g ? JSON.parse(g) : DEFAULT_SCENARIOS;
+    return g ? JSON.parse(g).map(clampScenario) : DEFAULT_SCENARIOS;
   });
 
   useEffect(() => {
@@ -64,8 +76,10 @@ export default function LoanSimulator() {
 
   const best = results[0];
 
-  const update = (id, key, value) =>
-    setScenarios((arr) => arr.map((s) => (s.id === id ? { ...s, [key]: value } : s)));
+  const update = (id, key, value) => {
+    const next = key in LIMITS ? clamp(value, LIMITS[key]) : value;
+    setScenarios((arr) => arr.map((s) => (s.id === id ? { ...s, [key]: next } : s)));
+  };
   const add = () =>
     setScenarios((arr) => [...arr, { id: uid(), name: `Opción ${arr.length + 1}`, tna: 100, meses: 12 }]);
   const remove = (id) => setScenarios((arr) => arr.filter((s) => s.id !== id));
@@ -82,9 +96,9 @@ export default function LoanSimulator() {
 
       <Card>
         <div className="grid-2" style={{ alignItems: "end", gap: 0, gridColumnGap: 18 }}>
-          <Field label="¿Cuánto querés pedir? (capital)">
-            <input className="input" type="number" value={capital}
-              onChange={(e) => setCapital(e.target.value)} placeholder="0" />
+          <Field label="¿Cuánto querés pedir? (hasta $100.000.000)">
+            <input className="input" type="number" min="0" max={LIMITS.capital} value={capital}
+              onChange={(e) => setCapital(clamp(e.target.value, LIMITS.capital))} placeholder="0" />
           </Field>
           <div style={{ marginBottom: 14 }} className="flex gap">
             <button className="btn btn-ghost btn-sm" onClick={add}><Plus size={15} /> Agregar opción</button>
@@ -97,8 +111,8 @@ export default function LoanSimulator() {
             <thead>
               <tr>
                 <th>Opción</th>
-                <th>TNA (%)</th>
-                <th>Plazo (meses)</th>
+                <th>TNA (% máx. 100)</th>
+                <th>Plazo (meses, máx. 72)</th>
                 <th className="right">Cuota</th>
                 <th className="right">Costo total</th>
                 <th></th>
@@ -114,11 +128,11 @@ export default function LoanSimulator() {
                         onChange={(e) => update(s.id, "name", e.target.value)} />
                     </td>
                     <td style={{ width: 100 }}>
-                      <input className="input" type="number" value={s.tna}
+                      <input className="input" type="number" min="0" max={LIMITS.tna} value={s.tna}
                         onChange={(e) => update(s.id, "tna", e.target.value)} />
                     </td>
                     <td style={{ width: 110 }}>
-                      <input className="input" type="number" value={s.meses}
+                      <input className="input" type="number" min="0" max={LIMITS.meses} value={s.meses}
                         onChange={(e) => update(s.id, "meses", e.target.value)} />
                     </td>
                     <td className="right num">{money(r.cuota)}</td>
