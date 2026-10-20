@@ -2,6 +2,13 @@ import { matchedData } from "express-validator";
 import { Op, fn, col } from "sequelize";
 import { Debt } from "../models/index.js";
 
+// YYYY-MM-DD using the server's local time (toISOString uses UTC and shifts the day at night)
+const toLocalISODate = (date) => {
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${date.getFullYear()}-${month}-${day}`;
+};
+
 // GET /api/debts  (GF-9)
 export const getDebts = async (req, res) => {
   try {
@@ -81,8 +88,8 @@ export const getUpcomingDebts = async (req, res) => {
     const in7 = new Date();
     in7.setDate(today.getDate() + 7);
 
-    const start = today.toISOString().slice(0, 10);
-    const end = in7.toISOString().slice(0, 10);
+    const start = toLocalISODate(today);
+    const end = toLocalISODate(in7);
 
     const upcoming = await Debt.findAll({
       where: {
