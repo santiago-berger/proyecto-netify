@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Plus, Trash2, PiggyBank, CircleDollarSign } from "lucide-react";
+import { Plus, Trash2, PiggyBank, CircleDollarSign, Pencil, MinusCircle } from "lucide-react";
 import { api } from "../api/api.js";
 import { Card } from "../components/ui/Card.jsx";
 import { Spinner } from "../components/ui/Spinner.jsx";
@@ -12,7 +12,9 @@ export default function Goals() {
   const [loading, setLoading] = useState(true);
   const [goals, setGoals] = useState([]);
   const [openNew, setOpenNew] = useState(false);
+  const [editingGoal, setEditingGoal] = useState(null);
   const [openContrib, setOpenContrib] = useState(null);
+  const [contribType, setContribType] = useState("deposit"); // deposit | withdrawal
   const [form, setForm] = useState({ name: "", target_amount: "" });
   const [contrib, setContrib] = useState({ amount: "", date: todayISO() });
   const [errors, setErrors] = useState({});
@@ -26,12 +28,36 @@ export default function Goals() {
   };
   useEffect(() => { load(); }, []);
 
-  const createGoal = async () => {
+  const openCreate = () => {
+    setEditingGoal(null);
+    setForm({ name: "", target_amount: "" });
+    setErrors({});
+    setOpenNew(true);
+  };
+
+  const openEdit = (g) => {
+    setEditingGoal(g);
+    setForm({ name: g.name, target_amount: g.target_amount });
+    setErrors({});
+    setOpenNew(true);
+  };
+
+  const openMovement = (g, type) => {
+    setContrib({ amount: "", date: todayISO() });
+    setContribType(type);
+    setErrors({});
+    setOpenContrib(g);
+  };
+
+  const saveGoal = async () => {
     setErrors({});
     setSaving(true);
     try {
-      await api.post("/goals", { ...form, target_amount: Number(form.target_amount) });
+      const payload = { ...form, target_amount: Number(form.target_amount) };
+      if (editingGoal) await api.put(`/goals/${editingGoal.id}`, payload);
+      else await api.post("/goals", payload);
       setOpenNew(false);
+      setEditingGoal(null);
       setForm({ name: "", target_amount: "" });
       await load();
     } catch (err) {
@@ -53,7 +79,7 @@ export default function Goals() {
       const goalId = openContrib.id;
       const goalName = openContrib.name;
       await api.post(`/goals/${goalId}/contributions`, {
-        ...contrib, amount: Number(contrib.amount),
+        ...contrib, amount: Number(contrib.amount), type: contribType,
       });
       setOpenContrib(null);
       setContrib({ amount: "", date: todayISO() });
@@ -68,6 +94,7 @@ export default function Goals() {
           percent: g.percent,
           completed: g.completed,
           restante,
+          withdrawal: contribType === "withdrawal",
         });
         setTimeout(() => setFeedback(null), 6000);
       }
@@ -77,6 +104,9 @@ export default function Goals() {
         const map = {};
         data.errors.forEach((x) => { map[x.path] = x.msg; });
         setErrors(map);
+      } else {
+        console.error("Error saving goal movement:", err);
+        setErrors({ amount: "No se pudo registrar el movimiento" });
       }
     } finally {
       setSaving(false);
@@ -95,14 +125,14 @@ export default function Goals() {
     <div className="page-grid">
       {feedback && (
         <div className="card" style={{ background: "rgba(14,223,220,.08)", border: "1px solid var(--teal-600)" }}>
-          {feedback.completed ? (
+          {feedback.completed && !feedback.withdrawal ? (
             <div className="r-title" style={{ color: "var(--teal-200)" }}>
               🎉 ¡Felicitaciones! Alcanzaste tu meta “{feedback.name}” (100%).
             </div>
           ) : (
             <>
               <div className="r-title" style={{ color: "var(--teal-200)" }}>
-                Aporte registrado en “{feedback.name}”. Vas {feedback.percent}% de tu meta.
+                {feedback.withdrawal ? "Retiro" : "Aporte"} registrado en “{feedback.name}”. Vas {feedback.percent}% de tu meta.
               </div>
               <div className="progress mt"><span style={{ width: `${feedback.percent}%` }} /></div>
               <div className="muted mt" style={{ fontSize: 12.5 }}>
@@ -115,7 +145,7 @@ export default function Goals() {
       <Card
         title="Metas de ahorro"
         sub="Definí objetivos y registrá tus aportes para verlos crecer"
-        action={<button className="btn btn-primary btn-sm" onClick={() => { setForm({ name: "", target_amount: "" }); setErrors({}); setOpenNew(true); }}><Plus size={15} /> Nueva meta</button>}
+        action={<button className="btn btn-primary btn-sm" onClick={openCreate}><Plus size={15} /> Nueva meta</button>}
       >
         {goals.length === 0 ? (
           <Empty icon={PiggyBank} title="Todavía no tenés metas" hint="Creá una meta, por ejemplo “Fondo de emergencia”." />
@@ -127,6 +157,7 @@ export default function Goals() {
                   <div className="r-title">{g.name}</div>
                   <div className="flex center gap">
                     {g.completed && <span className="chip ok">¡Lograda!</span>}
+                    <button className="btn btn-ghost btn-sm" onClick={() => openEdit(g)} style={{ padding: 6 }} title="Editar meta"><Pencil size={13} /></button>
                     <button className="btn btn-danger btn-sm" onClick={() => remove(g.id)} style={{ padding: 6 }}><Trash2 size={13} /></button>
                   </div>
                 </div>
@@ -135,9 +166,14 @@ export default function Goals() {
                   <span className="num muted">{money(g.saved)}</span>
                   <span className="num">{money(g.target_amount)}</span>
                 </div>
-                <button className="btn btn-ghost btn-sm mt btn-block" onClick={() => { setContrib({ amount: "", date: todayISO() }); setErrors({}); setOpenContrib(g); }}>
-                  <CircleDollarSign size={14} /> Agregar aporte
-                </button>
+                <div className="flex gap mt">
+                  <button className="btn btn-ghost btn-sm btn-block" onClick={() => openMovement(g, "deposit")}>
+                    <CircleDollarSign size={14} /> Agregar aporte
+                  </button>
+                  <button className="btn btn-ghost btn-sm btn-block" onClick={() => openMovement(g, "withdrawal")} disabled={g.saved <= 0}>
+                    <MinusCircle size={14} /> Retirar dinero
+                  </button>
+                </div>
               </div>
             ))}
           </div>
@@ -145,7 +181,7 @@ export default function Goals() {
       </Card>
 
       {openNew && (
-        <Modal title="Nueva meta de ahorro" onClose={() => setOpenNew(false)}>
+        <Modal title={editingGoal ? "Editar meta de ahorro" : "Nueva meta de ahorro"} onClose={() => setOpenNew(false)}>
           <Field label="Nombre de la meta" error={errors.name}>
             <input className="input" value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Ej: Fondo de emergencia" />
@@ -156,17 +192,25 @@ export default function Goals() {
           </Field>
           <div className="flex gap mt" style={{ justifyContent: "flex-end" }}>
             <button className="btn btn-ghost" onClick={() => setOpenNew(false)}>Cancelar</button>
-            <button className="btn btn-primary" onClick={createGoal} disabled={saving}>
-              {saving ? "Guardando…" : "Crear meta"}
+            <button className="btn btn-primary" onClick={saveGoal} disabled={saving}>
+              {saving ? "Guardando…" : editingGoal ? "Guardar cambios" : "Crear meta"}
             </button>
           </div>
         </Modal>
       )}
 
       {openContrib && (
-        <Modal title={`Aporte a “${openContrib.name}”`} onClose={() => setOpenContrib(null)}>
+        <Modal
+          title={contribType === "withdrawal" ? `Retiro de “${openContrib.name}”` : `Aporte a “${openContrib.name}”`}
+          onClose={() => setOpenContrib(null)}
+        >
+          {contribType === "withdrawal" && (
+            <p className="muted" style={{ fontSize: 13, marginTop: 0 }}>
+              Ahorrado hasta ahora: <span className="num">{money(openContrib.saved)}</span>. El monto se va a restar de la meta.
+            </p>
+          )}
           <div className="grid-2" style={{ gap: 0, gridColumnGap: 12 }}>
-            <Field label="Monto del aporte" error={errors.amount}>
+            <Field label={contribType === "withdrawal" ? "Monto a retirar" : "Monto del aporte"} error={errors.amount}>
               <input className="input" type="number" value={contrib.amount}
                 onChange={(e) => setContrib({ ...contrib, amount: e.target.value })} placeholder="0" autoFocus />
             </Field>
@@ -178,7 +222,7 @@ export default function Goals() {
           <div className="flex gap mt" style={{ justifyContent: "flex-end" }}>
             <button className="btn btn-ghost" onClick={() => setOpenContrib(null)}>Cancelar</button>
             <button className="btn btn-primary" onClick={addContribution} disabled={saving}>
-              {saving ? "Guardando…" : "Registrar aporte"}
+              {saving ? "Guardando…" : contribType === "withdrawal" ? "Registrar retiro" : "Registrar aporte"}
             </button>
           </div>
         </Modal>
