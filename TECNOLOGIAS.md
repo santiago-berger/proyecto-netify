@@ -25,9 +25,8 @@
 - React: interfaz con componentes
 - Vite: servidor de desarrollo y build
 - React Router DOM: navegación y rutas protegidas
-- Axios: peticiones a la API
+- Fetch API: peticiones a la API
 - Recharts: gráficos
 - Lucide React: íconos
-- Tesseract.js: lectura de comprobantes (OCR)
 - CSS propio
 - Google Fonts (Inter y Space Grotesk)
