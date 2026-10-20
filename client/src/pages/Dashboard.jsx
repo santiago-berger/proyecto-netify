@@ -14,6 +14,10 @@ import { Empty } from "../components/ui/Empty.jsx";
 import { money, shortDate, MONTHS } from "../utils/format.js";
 
 const TEALS = ["#0edfdc", "#7c5cff", "#ffb020", "#ff5c8a", "#3ddc84", "#4d9dff", "#c86bfa", "#8fa3ad"];
+const groupLabelStyle = {
+  fontSize: 10.5, textTransform: "uppercase", letterSpacing: ".08em",
+  color: "var(--muted-2)", fontWeight: 600, marginBottom: 2,
+};
 const MONTHS_LONG = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 
 // genera sugerencias simples según el desglose de gastos del mes
@@ -231,10 +235,14 @@ export default function Dashboard() {
         </Card>
 
         <div className="page-grid" style={{ gap: 18 }}>
-          <Card title="Próximos vencimientos">
-            {upcoming.overdue.length === 0 && upcoming.upcoming.length === 0 ? (
+          <Card title="Vencimientos">
+            {overdueCount === 0 && upcomingCount === 0 ? (
               <Empty icon={CalendarClock} title="Sin vencimientos cercanos" />
             ) : (
+              <>
+              {overdueCount > 0 && (
+              <>
+              <div style={groupLabelStyle}>Vencidas</div>
               <div className="list">
                 {upcoming.overdue.map((d) => (
                   <div className="row" key={`o-${d.id}`}>
@@ -246,6 +254,14 @@ export default function Dashboard() {
                     <div className="num" style={{ width: 90, textAlign: "right" }}>{money(d.amount)}</div>
                   </div>
                 ))}
+              </div>
+              </>
+              )}
+              <div style={{ ...groupLabelStyle, marginTop: overdueCount > 0 ? 14 : 0 }}>Próximos 7 días</div>
+              {upcomingCount === 0 ? (
+                <div className="muted" style={{ fontSize: 12.5, padding: "8px 0" }}>No tenés deudas que venzan esta semana.</div>
+              ) : (
+              <div className="list">
                 {upcoming.upcoming.map((d) => (
                   <div className="row" key={`u-${d.id}`}>
                     <div className="grow">
@@ -257,6 +273,8 @@ export default function Dashboard() {
                   </div>
                 ))}
               </div>
+              )}
+              </>
             )}
           </Card>
 
