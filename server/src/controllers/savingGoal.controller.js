@@ -1,14 +1,15 @@
 import { matchedData } from "express-validator";
 import { SavingGoal, SavingContribution } from "../models/index.js";
 
+// withdrawals are stored as negative contributions, so the sum is the current balance
+const sumContributions = (contributions) =>
+  (contributions || []).reduce((acc, c) => acc + Number(c.amount), 0);
+
 // arma la meta con su acumulado y porcentaje de avance
 const buildGoalView = (goal) => {
-  const saved = (goal.contributions || []).reduce(
-    (acc, c) => acc + Number(c.amount),
-    0
-  );
+  const saved = sumContributions(goal.contributions);
   const target = Number(goal.target_amount);
-  const percent = target > 0 ? Math.min(Math.round((saved / target) * 100), 100) : 0;
+  const percent = target > 0 ? Math.max(Math.min(Math.round((saved / target) * 100), 100), 0) : 0;
   return {
     id: goal.id,
     name: goal.name,
@@ -49,6 +50,23 @@ export const createGoal = async (req, res) => {
   }
 };
 
+// PUT /api/goals/:id
+export const updateGoal = async (req, res) => {
+  try {
+    const { id } = matchedData(req, { locations: ["params"] });
+    const data = matchedData(req, { locations: ["body"] });
+
+    const goal = await SavingGoal.findOne({ where: { id, user_id: req.user.id } });
+    if (!goal) return res.status(404).json({ message: "Meta no encontrada" });
+
+    await goal.update(data);
+    return res.status(200).json({ message: "Meta actualizada con éxito", goal });
+  } catch (error) {
+    console.error("Error updating saving goal:", error);
+    return res.status(500).json({ message: "No se pudo actualizar la meta" });
+  }
+};
+
 // DELETE /api/goals/:id
 export const deleteGoal = async (req, res) => {
   try {
@@ -69,18 +87,28 @@ export const deleteGoal = async (req, res) => {
 export const addContribution = async (req, res) => {
   try {
     const { id } = matchedData(req, { locations: ["params"] });
-    const data = matchedData(req, { locations: ["body"] });
+    const { type = "deposit", ...data } = matchedData(req, { locations: ["body"] });
+    const amount = Number(data.amount);
 
     const goal = await SavingGoal.findOne({ where: { id, user_id: req.user.id } });
     if (!goal) return res.status(404).json({ message: "Meta no encontrada" });
 
+    if (type === "withdrawal") {
+      const contributions = await SavingContribution.findAll({ where: { goal_id: goal.id } });
+      const saved = sumContributions(contributions);
+      if (amount > saved) {
+        const msg = "No podés retirar más de lo ahorrado en la meta";
+        return res.status(400).json({ message: msg, errors: [{ path: "amount", msg }] });
+      }
+    }
+
     const contribution = await SavingContribution.create({
       ...data,
+      amount: type === "withdrawal" ? -amount : amount,
       goal_id: goal.id,
     });
-    return res
-      .status(201)
-      .json({ message: "Aporte registrado con éxito", contribution });
+    const message = type === "withdrawal" ? "Retiro registrado con éxito" : "Aporte registrado con éxito";
+    return res.status(201).json({ message, contribution });
   } catch (error) {
     return res
       .status(500)

@@ -2,11 +2,13 @@ import { Router } from "express";
 import {
   getGoals,
   createGoal,
+  updateGoal,
   deleteGoal,
   addContribution,
 } from "../controllers/savingGoal.controller.js";
 import {
   createGoalValidation,
+  updateGoalValidation,
   contributionValidation,
   idParamValidation,
 } from "../middlewares/validations/savingGoal.validation.js";
@@ -19,5 +21,6 @@ savingGoalRouter.use(authMiddleware);
 
 savingGoalRouter.get("/goals", getGoals);
 savingGoalRouter.post("/goals", createGoalValidation, validate, createGoal);
+savingGoalRouter.put("/goals/:id", updateGoalValidation, validate, updateGoal);
 savingGoalRouter.delete("/goals/:id", idParamValidation, validate, deleteGoal);
 savingGoalRouter.post("/goals/:id/contributions", contributionValidation, validate, addContribution);
