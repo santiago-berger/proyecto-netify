@@ -82,7 +82,8 @@ export default function Dashboard() {
   if (loading) return <Spinner />;
 
   const topGoal = goals[0];
-  const alerts = upcoming.upcoming.length + upcoming.overdue.length;
+  const upcomingCount = upcoming.upcoming.length;
+  const overdueCount = upcoming.overdue.length;
   const tips = buildTips(summary);
 
   const changeMonth = (delta) => {
@@ -110,7 +111,12 @@ export default function Dashboard() {
         </div>
         <div className="stat">
           <div className="label"><CalendarClock size={15} /> Vencimientos próximos</div>
-          <div className="value num">{alerts}</div>
+          <div className="value num">{upcomingCount}</div>
+          {overdueCount > 0 && (
+            <div style={{ color: "var(--danger)", fontSize: 12.5, marginTop: 6 }}>
+              {overdueCount} {overdueCount === 1 ? "vencida" : "vencidas"}
+            </div>
+          )}
         </div>
         <div className="stat">
           <div className="label"><PiggyBank size={15} /> Metas activas</div>
