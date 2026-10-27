@@ -1,6 +1,6 @@
 import { body, param, query } from "express-validator";
 
-const REMINDER_TYPES = ["income", "payment", "loan", "other"];
+const REMINDER_TYPES = ["income", "payment", "other"];
 
 export const getRemindersValidation = [
   query("month").optional().isInt({ min: 1, max: 12 }).withMessage("El mes debe estar entre 1 y 12"),

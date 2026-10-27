@@ -15,7 +15,6 @@ const WEEK_DAYS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 export const EVENT_TYPES = {
   income: { label: "Ingreso", chip: "ok" },
   payment: { label: "Pago", chip: "warn" },
-  loan: { label: "Préstamo", chip: "teal" },
   other: { label: "Otro", chip: "" },
   debt: { label: "Deuda", chip: "danger" },
 };
@@ -176,13 +175,13 @@ export default function Calendar() {
                 <div className="calendar-day num">{Number(date.slice(8))}</div>
                 <div className="calendar-events">
                   {events.slice(0, 2).map((e) => (
-                    <div key={`${e.kind}-${e.id}`} className={`calendar-event ${EVENT_TYPES[e.type]?.chip || ""}`}>{e.title}</div>
+                    <div key={`${e.kind}-${e.id}`} className={`calendar-event ${(EVENT_TYPES[e.type] || EVENT_TYPES.other).chip || ""}`}>{e.title}</div>
                   ))}
                   {events.length > 2 && <div className="calendar-more">+{events.length - 2} más</div>}
                 </div>
                 {events.length > 0 && (
                   <div className="calendar-dots">
-                    {events.slice(0, 3).map((e) => <span key={`${e.kind}-${e.id}`} className={`calendar-dot ${EVENT_TYPES[e.type]?.chip || ""}`} />)}
+                    {events.slice(0, 3).map((e) => <span key={`${e.kind}-${e.id}`} className={`calendar-dot ${(EVENT_TYPES[e.type] || EVENT_TYPES.other).chip || ""}`} />)}
                   </div>
                 )}
               </div>
@@ -208,7 +207,7 @@ export default function Calendar() {
                   <div className="r-title">{e.title}</div>
                   {e.kind === "debt" && <div className="r-sub">Vencimiento de deuda · <Link to="/deudas" style={{ color: "var(--teal-200)" }}>ver deudas</Link></div>}
                 </div>
-                <span className={`chip ${EVENT_TYPES[e.type]?.chip || ""}`}>{EVENT_TYPES[e.type]?.label}</span>
+                <span className={`chip ${(EVENT_TYPES[e.type] || EVENT_TYPES.other).chip || ""}`}>{(EVENT_TYPES[e.type] || EVENT_TYPES.other).label}</span>
                 {e.amount != null && <div className="num" style={{ width: 100, textAlign: "right" }}>{money(e.amount)}</div>}
                 {e.kind === "reminder" && (
                   <div className="flex gap">
@@ -236,7 +235,7 @@ export default function Calendar() {
             <Field label="Tipo" error={errors.type}>
               <select className="select" value={form.type}
                 onChange={(e) => setForm({ ...form, type: e.target.value })}>
-                {["income", "payment", "loan", "other"].map((t) => (
+                {["income", "payment", "other"].map((t) => (
                   <option key={t} value={t}>{EVENT_TYPES[t].label}</option>
                 ))}
               </select>

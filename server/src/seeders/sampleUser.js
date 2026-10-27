@@ -215,7 +215,7 @@ const buildReminders = (userId, today) => {
   return [
     { title: "Pagar la luz", date: day(0), type: "payment", amount: 38000 },
     { title: "Cobro de freelance (diseño web)", date: day(1), type: "income", amount: 250000 },
-    { title: "Cuota del préstamo Banco Nación", date: day(25), type: "loan", amount: 86000 },
+    { title: "Cuota del préstamo Banco Nación", date: day(25), type: "payment", amount: 86000 },
     { title: "Cobro del sueldo", date: firstOfNext, type: "income", amount: SAMPLE_USER.monthly_income },
     { title: "Pagar alquiler", date: firstOfNext, type: "payment", amount: 380000 },
     { title: "Pagar expensas", date: fifthOfNext, type: "payment", amount: 65000 },

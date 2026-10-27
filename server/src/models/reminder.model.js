@@ -7,7 +7,7 @@ export const Reminder = sequelize.define(
     id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
     title: { type: DataTypes.STRING(100), allowNull: false },
     date: { type: DataTypes.DATEONLY, allowNull: false },
-    type: { type: DataTypes.STRING(20), allowNull: false, defaultValue: "other" }, // income | payment | loan | other
+    type: { type: DataTypes.STRING(20), allowNull: false, defaultValue: "other" }, // income | payment | other
     amount: { type: DataTypes.DECIMAL(12, 2), allowNull: true },
   },
   {
