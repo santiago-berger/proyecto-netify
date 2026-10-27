@@ -22,6 +22,7 @@ export const getMonthlyCategoryTotals = async (userId, month, year) => {
   });
 
   return rows.map((r) => ({
+    category_id: r.category_id,
     category: r.category?.name || "Sin categoría",
     color: r.category?.color || "#8CB9CC",
     icon: r.category?.icon || "circle",

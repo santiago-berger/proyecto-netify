@@ -10,6 +10,7 @@ import { SavingContribution } from "./savingContribution.model.js";
 import { Article } from "./article.model.js";
 import { Favorite } from "./favorite.model.js";
 import { Reminder } from "./reminder.model.js";
+import { CategoryColor } from "./categoryColor.model.js";
 
 /* =========================================================
    RELACIONES
@@ -55,6 +56,11 @@ SavingContribution.belongsTo(SavingGoal, { foreignKey: "goal_id", as: "goal" });
 User.hasMany(Reminder, { foreignKey: "user_id", as: "reminders", onDelete: "CASCADE" });
 Reminder.belongsTo(User, { foreignKey: "user_id", as: "user" });
 
+// colores personalizados de categorías base, por usuario
+User.hasMany(CategoryColor, { foreignKey: "user_id", as: "categoryColors", onDelete: "CASCADE" });
+Category.hasMany(CategoryColor, { foreignKey: "category_id", as: "userColors", onDelete: "CASCADE" });
+CategoryColor.belongsTo(Category, { foreignKey: "category_id", as: "category" });
+
 // N:M  User - Article  (a traves de Favorite)
 User.belongsToMany(Article, { through: Favorite, foreignKey: "user_id", otherKey: "article_id", as: "favoriteArticles" });
 Article.belongsToMany(User, { through: Favorite, foreignKey: "article_id", otherKey: "user_id", as: "usersWhoFaved" });
@@ -72,4 +78,5 @@ export {
   Article,
   Favorite,
   Reminder,
+  CategoryColor,
 };

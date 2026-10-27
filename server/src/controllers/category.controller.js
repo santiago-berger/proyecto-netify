@@ -1,6 +1,6 @@
 import { matchedData } from "express-validator";
 import { Op } from "sequelize";
-import { Category, Expense, Budget } from "../models/index.js";
+import { Category, Expense, Budget, CategoryColor } from "../models/index.js";
 
 // GET /api/categories -> categorías base del sistema + las personalizadas del usuario
 export const getCategories = async (req, res) => {
@@ -11,7 +11,13 @@ export const getCategories = async (req, res) => {
       },
       order: [["name", "ASC"]],
     });
-    return res.status(200).json(categories);
+
+    // replace the shared color of base categories with the one this user picked
+    const overrides = await CategoryColor.findAll({ where: { user_id: req.user.id } });
+    const colorById = Object.fromEntries(overrides.map((o) => [o.category_id, o.color]));
+    const result = categories.map((c) => ({ ...c.toJSON(), color: colorById[c.id] || c.color }));
+
+    return res.status(200).json(result);
   } catch (error) {
     return res
       .status(500)
@@ -34,6 +40,34 @@ export const createCategory = async (req, res) => {
     return res
       .status(500)
       .json({ message: "Error al crear la categoría", error: error.message });
+  }
+};
+
+// PUT /api/categories/:id/color -> own categories are updated, base ones get a per-user color
+export const updateCategoryColor = async (req, res) => {
+  try {
+    const { id } = matchedData(req, { locations: ["params"] });
+    const { color } = matchedData(req, { locations: ["body"] });
+
+    const category = await Category.findOne({
+      where: { id, [Op.or]: [{ user_id: null }, { user_id: req.user.id }] },
+    });
+    if (!category) return res.status(404).json({ message: "Categoría no encontrada" });
+
+    if (category.user_id === req.user.id) {
+      await category.update({ color });
+    } else {
+      const [override] = await CategoryColor.findOrCreate({
+        where: { user_id: req.user.id, category_id: category.id },
+        defaults: { color },
+      });
+      await override.update({ color });
+    }
+
+    return res.status(200).json({ message: "Color actualizado con éxito", category: { ...category.toJSON(), color } });
+  } catch (error) {
+    console.error("Error updating category color:", error);
+    return res.status(500).json({ message: "No se pudo actualizar el color" });
   }
 };
 

@@ -21,6 +21,13 @@ export const createCategoryValidation = [
   body("color").optional().isLength({ max: 7 }).withMessage("Color inválido"),
 ];
 
+export const updateColorValidation = [
+  param("id").isInt().withMessage("El id debe ser un entero"),
+  body("color")
+    .notEmpty().withMessage("El color es obligatorio")
+    .matches(/^#[0-9a-fA-F]{6}$/).withMessage("El color debe tener el formato #RRGGBB"),
+];
+
 export const idParamValidation = [
   param("id").isInt().withMessage("El id debe ser un entero"),
 ];
