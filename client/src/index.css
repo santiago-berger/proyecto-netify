@@ -205,9 +205,12 @@ a { color: inherit; text-decoration: none; }
 .avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--grad); display: grid; place-items: center; color: #fff; font-weight: 600; font-size: 14px; }
 
 /* ---------- stat / hero ---------- */
-.stat { background: var(--panel); border: none; border-radius: var(--radius); padding: 20px; }
+.stat { background: var(--panel); border: none; border-radius: var(--radius); padding: 20px; display: flex; flex-direction: column; }
 .stat .label { color: var(--muted); font-size: 12px; font-weight: 500; display: flex; align-items: center; gap: 7px; }
 .stat .value { font-size: 26px; margin-top: 10px; font-weight: 600; letter-spacing: -0.02em; }
+.stat .foot { margin-top: auto; padding-top: 12px; color: var(--muted); font-size: 12px; }
+/* big standalone numbers use proportional digits: tabular ones leave wide gaps around the "1" */
+.stat .value, .hero .value { font-variant-numeric: proportional-nums; }
 .hero { background: var(--grad); border: none; color: #fff; border-radius: var(--radius); padding: 22px; position: relative; overflow: hidden; }
 .hero .label { color: rgba(255,255,255,.75); font-size: 12.5px; font-weight: 500; }
 .hero .value { font-size: 34px; margin-top: 8px; font-weight: 600; letter-spacing: -0.02em; }

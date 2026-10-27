@@ -93,6 +93,9 @@ export default function Debts() {
   if (loading) return <Spinner />;
 
   const isOverdue = (d) => getStatus(d) === "overdue";
+  const paidCount = debts.filter((d) => d.is_paid).length;
+  const overdueDebts = debts.filter(isOverdue);
+  const overdueTotal = overdueDebts.reduce((acc, d) => acc + Number(d.amount), 0);
 
   // status filter first, then (optionally) order by distance to the chosen date
   const visibleDebts = debts
@@ -110,11 +113,15 @@ export default function Debts() {
         </div>
         <div className="stat">
           <div className="label">Pagadas</div>
-          <div className="value num">{debts.filter((d) => d.is_paid).length}</div>
+          <div className="value num">{paidCount}</div>
+          <div className="foot">de {debts.length} {debts.length === 1 ? "deuda registrada" : "deudas registradas"}</div>
         </div>
         <div className="stat">
           <div className="label">Vencidas</div>
-          <div className="value num">{debts.filter(isOverdue).length}</div>
+          <div className="value num" style={{ color: overdueDebts.length > 0 ? "var(--danger)" : undefined }}>{overdueDebts.length}</div>
+          <div className="foot">
+            {overdueDebts.length > 0 ? <>Suman <Amount value={overdueTotal} /></> : "Estás al día"}
+          </div>
         </div>
       </div>
 
