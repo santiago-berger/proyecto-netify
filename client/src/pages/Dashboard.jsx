@@ -22,6 +22,13 @@ const MONTHS_LONG = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Jul
 const TOP_BUDGETS = 4;
 const emptySummary = { total: 0, byCategory: [] };
 
+// short axis labels: 950k, 1,2M
+const compactMoney = (v) => {
+  if (v >= 1000000) return `${(v / 1000000).toFixed(1).replace(".0", "").replace(".", ",")}M`;
+  if (v >= 1000) return `${Math.round(v / 1000)}k`;
+  return v;
+};
+
 const previousPeriod = ({ month, year }) =>
   month === 1 ? { month: 12, year: year - 1 } : { month: month - 1, year };
 
@@ -61,7 +68,11 @@ export default function Dashboard() {
           api.get("/goals"),
           api.get("/categories"),
         ]);
-        setTrend(t.data.totals.map((x) => ({ mes: MONTHS[x.month - 1], total: x.total })));
+        // months that haven't happened yet have no value, so the line stops at the current month
+        setTrend(t.data.totals.map((x) => ({
+          mes: MONTHS[x.month - 1],
+          total: t.data.year === current.year && x.month > current.month ? null : x.total,
+        })));
         setMonthSummary(cur.data);
         setPrevSummary(prv.data);
         setDebts(d.data);
@@ -170,6 +181,7 @@ export default function Dashboard() {
       {/* ---------- gráficos ---------- */}
       <div className="grid-2">
         <Card
+          className="donut-wrap"
           title="Gastos por categoría"
           sub={<Link to="/gastos" style={{ color: "var(--teal-200)" }}>Ver detalle en Gastos</Link>}
           action={
@@ -185,27 +197,27 @@ export default function Dashboard() {
           {chartSummary.byCategory.length === 0 ? (
             <Empty icon={Receipt} title="Sin gastos en este mes" hint={isCurrent ? "Cargá tu primer gasto para ver el desglose." : "No hay gastos registrados en este período."} />
           ) : (
-            <div className="flex center" style={{ gap: 20, flexWrap: "wrap" }}>
-              <div style={{ width: 190, height: 190 }}>
+            <div className="donut-layout">
+              <div className="donut-chart">
                 <ResponsiveContainer>
                   <PieChart>
                     <Pie data={chartSummary.byCategory} dataKey="total" nameKey="category"
-                      innerRadius={58} outerRadius={88} paddingAngle={2} stroke="none">
+                      innerRadius={52} outerRadius={80} paddingAngle={2} stroke="none">
                       {chartSummary.byCategory.map((c, i) => <Cell key={i} fill={categoryColor(c, i)} />)}
                     </Pie>
                     <Tooltip formatter={(v) => money(v)} {...tooltipProps} />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
-              <div className="grow" style={{ minWidth: 200, flex: 1 }}>
+              <div className="donut-legend">
                 {chartSummary.byCategory.map((c, i) => {
                   const pct = chartSummary.total ? Math.round((c.total / chartSummary.total) * 100) : 0;
                   return (
-                    <div className="row" key={c.category} style={{ padding: "8px 0" }}>
-                      <span style={{ width: 10, height: 10, borderRadius: 3, background: categoryColor(c, i) }} />
+                    <div className="row" key={c.category}>
+                      <span className="cat-dot" style={{ background: categoryColor(c, i) }} />
                       <div className="grow r-title">{c.category}</div>
                       <div className="num muted" style={{ fontSize: 12.5 }}>{pct}%</div>
-                      <div className="num" style={{ width: 90, textAlign: "right" }}>{money(c.total)}</div>
+                      <div className="num" style={{ minWidth: 84, textAlign: "right" }}>{money(c.total)}</div>
                     </div>
                   );
                 })}
@@ -217,7 +229,7 @@ export default function Dashboard() {
         <Card title="Tendencia de gastos" sub="Total gastado por mes (año actual)">
           <div style={{ width: "100%", height: 230 }}>
             <ResponsiveContainer>
-              <AreaChart data={trend} margin={{ left: -18, right: 8, top: 8 }}>
+              <AreaChart data={trend} margin={{ left: 0, right: 8, top: 8, bottom: 0 }}>
                 <defs>
                   <linearGradient id="az" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#0edfdc" stopOpacity={0.5} />
@@ -225,11 +237,10 @@ export default function Dashboard() {
                   </linearGradient>
                 </defs>
                 <CartesianGrid stroke="#23282e" vertical={false} />
-                <XAxis dataKey="mes" stroke="#5f7280" fontSize={11} tickLine={false} axisLine={false} />
-                <YAxis stroke="#5f7280" fontSize={11} tickLine={false} axisLine={false} width={54}
-                  tickFormatter={(v) => (v >= 1000 ? `${v / 1000}k` : v)} />
+                <XAxis dataKey="mes" stroke="#5f7280" fontSize={11} tickLine={false} axisLine={false} interval="preserveStartEnd" minTickGap={4} />
+                <YAxis stroke="#5f7280" fontSize={11} tickLine={false} axisLine={false} width={44} tickFormatter={compactMoney} />
                 <Tooltip formatter={(v) => money(v)} {...tooltipProps} />
-                <Area type="monotone" dataKey="total" stroke="#0edfdc" strokeWidth={2} fill="url(#az)" />
+                <Area type="monotone" dataKey="total" stroke="#0edfdc" strokeWidth={2} fill="url(#az)" connectNulls={false} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
