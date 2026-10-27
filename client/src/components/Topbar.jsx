@@ -1,4 +1,5 @@
 import { Menu } from "lucide-react";
+import { NotificationBell } from "./NotificationBell.jsx";
 
 export const Topbar = ({ hello, onMenu }) => {
   return (
@@ -13,10 +14,13 @@ export const Topbar = ({ hello, onMenu }) => {
         </div>
       </div>
 
-      {/* arriba a la derecha: marca */}
-      <div className="topbar-brand">
-        <img src="/finanzas-icon.png" alt="Netify" />
-        <span>Netify</span>
+      {/* arriba a la derecha: notificaciones + marca */}
+      <div className="topbar-right">
+        <NotificationBell />
+        <div className="topbar-brand">
+          <img src="/finanzas-icon.png" alt="Netify" />
+          <span>Netify</span>
+        </div>
       </div>
     </div>
   );
