@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Plus, Pencil, Trash2, Receipt, ChevronLeft, ChevronRight } from "lucide-react";
 import { api } from "../api/api.js";
 import { Card } from "../components/ui/Card.jsx";
 import { Spinner } from "../components/ui/Spinner.jsx";
 import { Empty } from "../components/ui/Empty.jsx";
 import { ExpenseModal } from "../components/ExpenseModal.jsx";
-import { money, longDate } from "../utils/format.js";
+import { money, longDate, todayISO } from "../utils/format.js";
+
+const MONTH_NAMES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 
 const ORDERS = [
   { key: "desc", label: "Más recientes" },
@@ -15,6 +17,11 @@ const ORDERS = [
 
 export default function CategoryExpenses() {
   const { id } = useParams();
+  // the month comes from the "Gastos" screen; without it, the current month is used
+  const [searchParams, setSearchParams] = useSearchParams();
+  const now = new Date();
+  const month = Number(searchParams.get("month")) || now.getMonth() + 1;
+  const year = Number(searchParams.get("year")) || now.getFullYear();
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [data, setData] = useState(null);
@@ -26,7 +33,7 @@ export default function CategoryExpenses() {
   const load = async () => {
     try {
       const [e, c] = await Promise.all([
-        api.get(`/expenses/category/${id}?page=${page}&order=${order}`),
+        api.get(`/expenses/category/${id}?page=${page}&order=${order}&month=${month}&year=${year}`),
         api.get("/categories"),
       ]);
       // after deleting the last expense of a page, go back one page
@@ -44,7 +51,13 @@ export default function CategoryExpenses() {
       setLoading(false);
     }
   };
-  useEffect(() => { load(); }, [id, page, order]);
+  useEffect(() => { load(); }, [id, page, order, month, year]);
+
+  const changeMonth = (delta) => {
+    const date = new Date(year, month - 1 + delta, 1);
+    setSearchParams({ month: date.getMonth() + 1, year: date.getFullYear() });
+    setPage(1);
+  };
 
   const changeOrder = (key) => {
     setOrder(key);
@@ -69,7 +82,7 @@ export default function CategoryExpenses() {
   if (loading) return <Spinner />;
 
   const backLink = (
-    <Link to="/gastos" className="btn btn-ghost btn-sm" style={{ alignSelf: "flex-start" }}>
+    <Link to="/gastos" state={{ month, year }} className="btn btn-ghost btn-sm" style={{ alignSelf: "flex-start" }}>
       <ArrowLeft size={14} /> Volver a Gastos
     </Link>
   );
@@ -85,6 +98,7 @@ export default function CategoryExpenses() {
 
   // the user's own color for this category (base categories can have a personal one)
   const color = categories.find((c) => c.id === data.category.id)?.color || data.category.color || "#8fa3ad";
+  const isCurrentMonth = month === now.getMonth() + 1 && year === now.getFullYear();
   const from = data.count === 0 ? 0 : (data.page - 1) * data.perPage + 1;
   const to = Math.min(data.page * data.perPage, data.count);
 
@@ -99,12 +113,12 @@ export default function CategoryExpenses() {
             <div>
               <h2 style={{ fontSize: 20 }}>{data.category.name}</h2>
               <div className="muted" style={{ fontSize: 12.5 }}>
-                {data.count} {data.count === 1 ? "gasto registrado" : "gastos registrados"} en total
+                {data.count} {data.count === 1 ? "gasto" : "gastos"} en {MONTH_NAMES[month - 1].toLowerCase()} {year}
               </div>
             </div>
           </div>
           <div className="right">
-            <div className="muted" style={{ fontSize: 12 }}>Total gastado</div>
+            <div className="muted" style={{ fontSize: 12 }}>Total del mes</div>
             <div className="num" style={{ fontSize: 22, fontWeight: 600 }}>{money(data.totalAmount)}</div>
           </div>
         </div>
@@ -114,14 +128,21 @@ export default function CategoryExpenses() {
         title="Gastos"
         action={<button className="btn btn-primary btn-sm" onClick={() => setModal({})}><Plus size={15} /> Nuevo gasto</button>}
       >
-        <div className="section-tabs">
-          {ORDERS.map((o) => (
-            <div key={o.key} className={`tab ${order === o.key ? "active" : ""}`} onClick={() => changeOrder(o.key)}>{o.label}</div>
-          ))}
+        <div className="flex between center" style={{ flexWrap: "wrap", gap: 12, marginBottom: 18 }}>
+          <div className="section-tabs" style={{ marginBottom: 0 }}>
+            {ORDERS.map((o) => (
+              <div key={o.key} className={`tab ${order === o.key ? "active" : ""}`} onClick={() => changeOrder(o.key)}>{o.label}</div>
+            ))}
+          </div>
+          <div className="flex center gap">
+            <button className="btn btn-ghost btn-sm" onClick={() => changeMonth(-1)} style={{ padding: 7 }} title="Mes anterior"><ChevronLeft size={15} /></button>
+            <div className="r-title" style={{ minWidth: 130, textAlign: "center", fontWeight: 600 }}>{MONTH_NAMES[month - 1]} {year}</div>
+            <button className="btn btn-ghost btn-sm" onClick={() => changeMonth(1)} style={{ padding: 7 }} title="Mes siguiente"><ChevronRight size={15} /></button>
+          </div>
         </div>
 
         {data.count === 0 ? (
-          <Empty icon={Receipt} title="Todavía no hay gastos en esta categoría" />
+          <Empty icon={Receipt} title={`No hay gastos de esta categoría en ${MONTH_NAMES[month - 1].toLowerCase()} ${year}`} />
         ) : (
           <>
             <div className="list">
@@ -159,6 +180,7 @@ export default function CategoryExpenses() {
       {modal && (
         <ExpenseModal
           expense={modal.expense}
+          initialDate={isCurrentMonth ? todayISO() : `${year}-${String(month).padStart(2, "0")}-01`}
           initialCategoryId={data.category.id}
           categories={categories}
           onCategoriesChange={setCategories}

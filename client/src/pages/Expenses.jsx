@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   Plus, Receipt, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, GripVertical, ArrowRight,
 } from "lucide-react";
@@ -52,8 +52,13 @@ const stop = (handler) => (e) => {
 export default function Expenses() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [loading, setLoading] = useState(true);
-  const [view, setView] = useState(currentPeriod);
+  // when coming back from a category page, keep the month the user was looking at
+  const [view, setView] = useState(() => {
+    const { month, year } = location.state || {};
+    return month && year ? { month, year } : currentPeriod();
+  });
   const [expenses, setExpenses] = useState([]);
   const [categories, setCategories] = useState([]);
   const [order, setOrder] = useState(() => getPreference(user?.id, ORDER_PREF, []));
@@ -189,7 +194,7 @@ export default function Expenses() {
                 className={classes}
                 style={{ borderTopColor: g.color }}
                 draggable
-                onClick={() => navigate(`/gastos/categoria/${g.id}`)}
+                onClick={() => navigate(`/gastos/categoria/${g.id}?month=${view.month}&year=${view.year}`)}
                 onDragStart={(e) => { setDragId(g.id); e.dataTransfer.effectAllowed = "move"; }}
                 onDragOver={(e) => { e.preventDefault(); setOverId(g.id); }}
                 onDrop={(e) => { e.preventDefault(); dropOn(g.id); endDrag(); }}
