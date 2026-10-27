@@ -5,7 +5,7 @@ import {
   AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid,
 } from "recharts";
 import {
-  TrendingDown, CreditCard, PiggyBank, CalendarClock, Receipt, Lightbulb, ChevronLeft, ChevronRight, AlertCircle,
+  TrendingDown, CreditCard, PiggyBank, CalendarClock, Receipt, ChevronLeft, ChevronRight, AlertCircle,
 } from "lucide-react";
 import { api } from "../api/api.js";
 import { Card } from "../components/ui/Card.jsx";
@@ -19,30 +19,6 @@ const groupLabelStyle = {
   color: "var(--muted-2)", fontWeight: 600, marginBottom: 2,
 };
 const MONTHS_LONG = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
-
-// genera sugerencias simples según el desglose de gastos del mes
-const buildTips = (summary) => {
-  const tips = [];
-  const { total, byCategory } = summary;
-  if (!total || byCategory.length === 0) return tips;
-  const sorted = [...byCategory].sort((a, b) => b.total - a.total);
-  const top = sorted[0];
-  const topPct = Math.round((top.total / total) * 100);
-  if (topPct >= 40) {
-    tips.push(`Estás concentrando el ${topPct}% de tus gastos en “${top.category}”. Revisá si podés recortar algo ahí.`);
-  }
-  const ocio = byCategory.find((c) => /ocio|entreten/i.test(c.category));
-  if (ocio && ocio.total / total >= 0.2) {
-    tips.push(`Ocio representa el ${Math.round((ocio.total / total) * 100)}% del mes. Ponerle un presupuesto puede ayudarte a ahorrar.`);
-  }
-  if (byCategory.length >= 6) {
-    tips.push("Tenés gastos repartidos en muchas categorías: fijar topes por categoría te va a dar más control.");
-  }
-  if (tips.length === 0) {
-    tips.push("Tus gastos se ven equilibrados este mes. Buen momento para destinar algo a una meta de ahorro.");
-  }
-  return tips.slice(0, 3);
-};
 
 export default function Dashboard() {
   const [loading, setLoading] = useState(true);
@@ -89,7 +65,6 @@ export default function Dashboard() {
   const topGoal = goals[0];
   const upcomingCount = upcoming.upcoming.length;
   const overdueCount = upcoming.overdue.length;
-  const tips = buildTips(summary);
 
   const changeMonth = (delta) => {
     setPeriod((p) => {
@@ -199,20 +174,6 @@ export default function Dashboard() {
           </div>
         </Card>
       </div>
-
-      {/* sugerencias de ahorro */}
-      {tips.length > 0 && (
-        <Card title="Sugerencias para ahorrar" sub="Basadas en tus gastos del mes">
-          <div className="list">
-            {tips.map((t, i) => (
-              <div className="row" key={i}>
-                <div className="icon-badge"><Lightbulb size={17} /></div>
-                <div className="grow r-title" style={{ fontWeight: 500 }}>{t}</div>
-              </div>
-            ))}
-          </div>
-        </Card>
-      )}
 
       <div className="grid-2">
         <Card title="Últimos movimientos" sub="Tus gastos más recientes">

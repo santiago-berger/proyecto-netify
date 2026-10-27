@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Bell, AlertCircle, Clock, CalendarDays, BellOff } from "lucide-react";
+import { Bell, AlertCircle, Clock, CalendarDays, BellOff, Lightbulb } from "lucide-react";
 import { api } from "../api/api.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import { money, shortDate, daysBetween } from "../utils/format.js";
@@ -24,7 +24,7 @@ const saveReadIds = (ids) => {
   }
 };
 
-const ICONS = { debt_overdue: AlertCircle, debt_soon: Clock, reminder: CalendarDays };
+const ICONS = { debt_overdue: AlertCircle, debt_soon: Clock, reminder: CalendarDays, tip: Lightbulb };
 
 const relativeDay = (today, date) => {
   const days = daysBetween(today, date);
@@ -34,6 +34,7 @@ const relativeDay = (today, date) => {
 };
 
 const describe = (n, today) => {
+  if (n.kind === "tip") return { heading: "Sugerencia para ahorrar", text: n.title };
   const amount = n.amount != null ? ` · ${money(n.amount)}` : "";
   if (n.kind === "debt_overdue") return { heading: "Deuda vencida", text: `${n.title}${amount} · venció el ${shortDate(n.date)}` };
   if (n.kind === "debt_soon") return { heading: "Vencimiento próximo", text: `${n.title}${amount} · vence ${relativeDay(today, n.date)}` };
@@ -75,7 +76,7 @@ export const NotificationBell = () => {
   }, [open]);
 
   // debt alerts only make sense if the debts tool is enabled
-  const visible = items.filter((n) => n.kind === "reminder" || modules?.deudas !== false);
+  const visible = items.filter((n) => !n.kind.startsWith("debt") || modules?.deudas !== false);
   const unreadCount = visible.filter((n) => !readIds.includes(n.id)).length;
 
   const markRead = (ids) => {
