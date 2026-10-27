@@ -1,7 +1,11 @@
-import { Menu } from "lucide-react";
+import { Menu, Sun, Moon } from "lucide-react";
 import { NotificationBell } from "./NotificationBell.jsx";
+import { useTheme } from "../context/ThemeContext.jsx";
 
 export const Topbar = ({ hello, onMenu }) => {
+  const { theme, toggleTheme } = useTheme();
+  const isDark = theme === "dark";
+
   return (
     <div className="topbar">
       <div className="flex center gap">
@@ -14,8 +18,12 @@ export const Topbar = ({ hello, onMenu }) => {
         </div>
       </div>
 
-      {/* arriba a la derecha: notificaciones + marca */}
+      {/* arriba a la derecha: tema + notificaciones + marca */}
       <div className="topbar-right">
+        <button className="btn btn-ghost btn-sm" onClick={toggleTheme} style={{ padding: 9 }}
+          title={isDark ? "Cambiar a modo claro" : "Cambiar a modo oscuro"} aria-label={isDark ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}>
+          {isDark ? <Sun size={18} /> : <Moon size={18} />}
+        </button>
         <NotificationBell />
         <div className="topbar-brand">
           <img src="/finanzas-icon.png" alt="Netify" />

@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { api } from "../api/api.js";
 import { useAuth } from "../context/AuthContext.jsx";
+import { useTheme } from "../context/ThemeContext.jsx";
 import { getPreference } from "../utils/preferences.js";
 import { Card } from "../components/ui/Card.jsx";
 import { Amount } from "../components/ui/Amount.jsx";
@@ -35,6 +36,7 @@ const previousPeriod = ({ month, year }) =>
 
 export default function Dashboard() {
   const { user, modules } = useAuth();
+  const { theme } = useTheme();
   const now = new Date();
   const current = { month: now.getMonth() + 1, year: now.getFullYear() };
   const prev = previousPeriod(current);
@@ -124,14 +126,17 @@ export default function Dashboard() {
   };
   const isCurrent = period.month === current.month && period.year === current.year;
 
+  // SVG attributes can't read CSS variables, so the chart grid color follows the theme here
+  const gridColor = theme === "light" ? "rgba(15,23,32,.08)" : "rgba(255,255,255,.05)";
+
   // same colors the user picked in "Gastos"
   const colorById = Object.fromEntries(categories.map((cat) => [cat.id, cat.color]));
   const categoryColor = (c, i) => colorById[c.category_id] || c.color || TEALS[i % TEALS.length];
   const tooltipProps = {
-    contentStyle: { background: "#1d2229", border: "none", borderRadius: 10, boxShadow: "0 8px 24px rgba(0,0,0,.35)" },
-    itemStyle: { color: "#e7ebef" },
-    labelStyle: { color: "#98a2ad" },
-    cursor: { stroke: "rgba(255,255,255,.08)" },
+    contentStyle: { background: "var(--panel-2)", border: "none", borderRadius: 10, boxShadow: "var(--shadow)" },
+    itemStyle: { color: "var(--text)" },
+    labelStyle: { color: "var(--muted)" },
+    cursor: { stroke: gridColor },
   };
   const showSideColumn = showBudgets || (showGoals && topGoal);
 
@@ -237,7 +242,7 @@ export default function Dashboard() {
                     <stop offset="100%" stopColor="#3fc9c5" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid stroke="rgba(255,255,255,.05)" vertical={false} />
+                <CartesianGrid stroke={gridColor} vertical={false} />
                 <XAxis dataKey="mes" stroke="#6a7480" fontSize={11} tickLine={false} axisLine={false} interval="preserveStartEnd" minTickGap={4} />
                 <YAxis stroke="#6a7480" fontSize={11} tickLine={false} axisLine={false} width={44} tickFormatter={compactMoney} />
                 <Tooltip formatter={(v) => money(v)} {...tooltipProps} />

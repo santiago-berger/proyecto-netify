@@ -102,7 +102,7 @@ export const ExpenseModal = ({ expense, initialDate, initialCategoryId, categori
             {PALETTE.map((col) => (
               <button key={col} type="button" onClick={() => setNewCat({ ...newCat, color: col })}
                 style={{ width: 22, height: 22, borderRadius: 6, background: col, cursor: "pointer",
-                  border: newCat.color === col ? "2px solid #fff" : "1px solid #24393b" }} />
+                  border: newCat.color === col ? "2px solid var(--text)" : "1px solid var(--charcoal)" }} />
             ))}
           </div>
           {catError && <span className="field-error" style={{ marginTop: 6 }}>{catError}</span>}
