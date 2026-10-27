@@ -11,12 +11,12 @@ import { hashPassword } from "../helpers/bcrypt.helper.js";
 /* Categorías básicas (GF-5). Colores pastel y desaturados, distinguibles entre sí. */
 const CATEGORIES = [
   { name: "Alimentos", icon: "utensils", color: "#3fc9c5" },
-  { name: "Transporte", icon: "bus", color: "#7aa6dc" },
-  { name: "Vivienda", icon: "home", color: "#8f84e0" },
-  { name: "Servicios", icon: "plug", color: "#dcb377" },
-  { name: "Salud", icon: "heart-pulse", color: "#7fc8a4" },
-  { name: "Educación", icon: "graduation-cap", color: "#d98fa3" },
-  { name: "Ocio", icon: "gamepad-2", color: "#b593dc" },
+  { name: "Transporte", icon: "bus", color: "#6f9fe0" },
+  { name: "Vivienda", icon: "home", color: "#9a8be6" },
+  { name: "Servicios", icon: "plug", color: "#d9b26a" },
+  { name: "Salud", icon: "heart-pulse", color: "#86c99c" },
+  { name: "Educación", icon: "graduation-cap", color: "#e08fae" },
+  { name: "Ocio", icon: "gamepad-2", color: "#c79bd8" },
   { name: "Otros", icon: "ellipsis", color: "#8fa3ad" },
 ];
 

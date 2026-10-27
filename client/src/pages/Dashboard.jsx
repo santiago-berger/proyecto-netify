@@ -18,7 +18,7 @@ import { Empty } from "../components/ui/Empty.jsx";
 import { Progress } from "../components/ui/Progress.jsx";
 import { money, MONTHS } from "../utils/format.js";
 
-const TEALS = ["#3fc9c5", "#8f84e0", "#dcb377", "#d98fa3", "#7fc8a4", "#7aa6dc", "#b593dc", "#8fa3ad"];
+const TEALS = ["#3fc9c5", "#6f9fe0", "#9a8be6", "#c79bd8", "#e08fae", "#e3967e", "#d9b26a", "#86c99c", "#b9c46c", "#8fa3ad"];
 const MONTHS_LONG = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 const TOP_BUDGETS = 4;
 const emptySummary = { total: 0, byCategory: [] };
