@@ -12,6 +12,7 @@ import LoanSimulator from "./pages/LoanSimulator.jsx";
 import Learn from "./pages/Learn.jsx";
 import Profile from "./pages/Profile.jsx";
 import Calendar from "./pages/Calendar.jsx";
+import CategoryExpenses from "./pages/CategoryExpenses.jsx";
 
 export default function App() {
   return (
@@ -28,6 +29,7 @@ export default function App() {
       >
         <Route path="/" element={<Dashboard />} />
         <Route path="/gastos" element={<Expenses />} />
+        <Route path="/gastos/categoria/:id" element={<CategoryExpenses />} />
         <Route path="/calendario" element={<Calendar />} />
         <Route path="/presupuestos" element={<Budgets />} />
         <Route path="/deudas" element={<Debts />} />
