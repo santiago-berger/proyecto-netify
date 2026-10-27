@@ -1,13 +1,7 @@
 import { matchedData } from "express-validator";
 import { Op, fn, col } from "sequelize";
 import { Debt } from "../models/index.js";
-
-// YYYY-MM-DD using the server's local time (toISOString uses UTC and shifts the day at night)
-const toLocalISODate = (date) => {
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${date.getFullYear()}-${month}-${day}`;
-};
+import { toLocalISODate } from "../helpers/date.helper.js";
 
 // GET /api/debts  (GF-9)
 export const getDebts = async (req, res) => {
