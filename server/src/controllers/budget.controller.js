@@ -1,16 +1,18 @@
 import { matchedData } from "express-validator";
 import { Op, fn, col } from "sequelize";
 import { Budget, Category, Expense } from "../models/index.js";
+import { getCurrentPeriod, getMonthRange } from "../helpers/date.helper.js";
 
-// GET /api/budgets  (GF-7)
+// GET /api/budgets  (GF-7) -> only the budgets of the current month
 export const getBudgets = async (req, res) => {
   try {
+    const { month, year } = getCurrentPeriod();
     const budgets = await Budget.findAll({
-      where: { user_id: req.user.id },
+      where: { user_id: req.user.id, month, year },
       include: [{ model: Category, as: "category" }],
-      order: [["year", "DESC"], ["month", "DESC"]],
+      order: [["created_at", "ASC"]],
     });
-    return res.status(200).json(budgets);
+    return res.status(200).json({ month, year, budgets });
   } catch (error) {
     return res
       .status(500)
@@ -22,7 +24,8 @@ export const getBudgets = async (req, res) => {
 export const createBudget = async (req, res) => {
   try {
     const data = matchedData(req, { locations: ["body"] });
-    const budget = await Budget.create({ ...data, user_id: req.user.id });
+    const { month, year } = getCurrentPeriod();
+    const budget = await Budget.create({ ...data, month, year, user_id: req.user.id });
     return res
       .status(201)
       .json({ message: "Presupuesto creado con éxito", budget });
@@ -74,12 +77,11 @@ export const deleteBudget = async (req, res) => {
 // GET /api/budgets/status  (GF-8) -> compara gasto vs tope y calcula estado
 export const getBudgetStatus = async (req, res) => {
   try {
-    const now = new Date();
-    const month = Number(req.query.month) || now.getMonth() + 1;
-    const year = Number(req.query.year) || now.getFullYear();
+    const current = getCurrentPeriod();
+    const month = Number(req.query.month) || current.month;
+    const year = Number(req.query.year) || current.year;
 
-    const start = `${year}-${String(month).padStart(2, "0")}-01`;
-    const end = new Date(year, month, 0).toISOString().slice(0, 10);
+    const { start, end } = getMonthRange(month, year);
 
     const budgets = await Budget.findAll({
       where: { user_id: req.user.id, month, year },
