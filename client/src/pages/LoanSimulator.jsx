@@ -1,8 +1,8 @@
 import { useState, useMemo, useEffect } from "react";
 import { Plus, Trash2, Calculator, Trophy, Info, RotateCcw } from "lucide-react";
 import { Card } from "../components/ui/Card.jsx";
+import { Amount } from "../components/ui/Amount.jsx";
 import { Field } from "../components/ui/Field.jsx";
-import { money } from "../utils/format.js";
 
 /*
   Simulador de préstamos (sistema francés, cuota fija).
@@ -135,8 +135,8 @@ export default function LoanSimulator() {
                       <input className="input" type="number" min="0" max={LIMITS.meses} value={s.meses}
                         onChange={(e) => update(s.id, "meses", e.target.value)} />
                     </td>
-                    <td className="right num">{money(r.cuota)}</td>
-                    <td className="right num">{money(r.total)}</td>
+                    <td className="right num"><Amount value={r.cuota} /></td>
+                    <td className="right num"><Amount value={r.total} /></td>
                     <td className="right">
                       <button className="btn btn-danger btn-sm" onClick={() => remove(s.id)} style={{ padding: 7 }}>
                         <Trash2 size={14} />
@@ -155,16 +155,16 @@ export default function LoanSimulator() {
           <div className="list">
             {results.map((r, idx) => (
               <div className="row" key={r.id}>
-                <div className="icon-badge" style={idx === 0 ? { background: "rgba(255,228,94,.12)", color: "var(--coin)" } : {}}>
+                <div className="icon-badge" style={idx === 0 ? { background: "rgba(233,210,122,.1)", color: "var(--coin)" } : {}}>
                   {idx === 0 ? <Trophy size={17} /> : <span className="num">{idx + 1}</span>}
                 </div>
                 <div className="grow">
                   <div className="r-title">{r.name} {idx === 0 && <span className="chip coin" style={{ marginLeft: 6 }}>Más conveniente</span>}</div>
-                  <div className="r-sub">Cuota de {money(r.cuota)} · {r.meses} meses · TNA {r.tna}%</div>
+                  <div className="r-sub">Cuota de <Amount value={r.cuota} /> · {r.meses} meses · TNA {r.tna}%</div>
                 </div>
                 <div className="right">
-                  <div className="num" style={{ fontWeight: 600 }}>{money(r.total)}</div>
-                  <div className="r-sub">Intereses: {money(r.interes)}</div>
+                  <div className="num" style={{ fontWeight: 600 }}><Amount value={r.total} /></div>
+                  <div className="r-sub">Intereses: <Amount value={r.interes} /></div>
                 </div>
               </div>
             ))}

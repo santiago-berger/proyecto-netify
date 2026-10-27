@@ -2,11 +2,12 @@ import { useEffect, useState } from "react";
 import { Plus, Trash2, PiggyBank, CircleDollarSign, Pencil, MinusCircle, Star } from "lucide-react";
 import { api } from "../api/api.js";
 import { Card } from "../components/ui/Card.jsx";
+import { Amount } from "../components/ui/Amount.jsx";
 import { Spinner } from "../components/ui/Spinner.jsx";
 import { Empty } from "../components/ui/Empty.jsx";
 import { Modal } from "../components/ui/Modal.jsx";
 import { Field } from "../components/ui/Field.jsx";
-import { money, todayISO } from "../utils/format.js";
+import { todayISO } from "../utils/format.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import { getPreference, savePreference } from "../utils/preferences.js";
 
@@ -135,7 +136,7 @@ export default function Goals() {
   return (
     <div className="page-grid">
       {feedback && (
-        <div className="card" style={{ background: "rgba(14,223,220,.08)", border: "1px solid var(--teal-600)" }}>
+        <div className="card" style={{ background: "rgba(63,201,197,.07)" }}>
           {feedback.completed && !feedback.withdrawal ? (
             <div className="r-title" style={{ color: "var(--teal-200)" }}>
               🎉 ¡Felicitaciones! Alcanzaste tu meta “{feedback.name}” (100%).
@@ -147,7 +148,7 @@ export default function Goals() {
               </div>
               <div className="progress mt"><span style={{ width: `${feedback.percent}%` }} /></div>
               <div className="muted mt" style={{ fontSize: 12.5 }}>
-                Te faltan {money(feedback.restante)} para cumplirla.
+                Te faltan <Amount value={feedback.restante} /> para cumplirla.
               </div>
             </>
           )}
@@ -181,8 +182,8 @@ export default function Goals() {
                 </div>
                 <div className="progress mt"><span style={{ width: `${g.percent}%` }} /></div>
                 <div className="flex between mt" style={{ fontSize: 12.5 }}>
-                  <span className="num muted">{money(g.saved)}</span>
-                  <span className="num">{money(g.target_amount)}</span>
+                  <span className="num muted"><Amount value={g.saved} /></span>
+                  <span className="num"><Amount value={g.target_amount} /></span>
                 </div>
                 <div className="flex gap mt">
                   <button className="btn btn-ghost btn-sm btn-block" onClick={() => openMovement(g, "deposit")}>
@@ -224,7 +225,7 @@ export default function Goals() {
         >
           {contribType === "withdrawal" && (
             <p className="muted" style={{ fontSize: 13, marginTop: 0 }}>
-              Ahorrado hasta ahora: <span className="num">{money(openContrib.saved)}</span>. El monto se va a restar de la meta.
+              Ahorrado hasta ahora: <span className="num"><Amount value={openContrib.saved} /></span>. El monto se va a restar de la meta.
             </p>
           )}
           <div className="grid-2" style={{ gap: 0, gridColumnGap: 12 }}>

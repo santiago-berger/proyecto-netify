@@ -2,11 +2,12 @@ import { useEffect, useState } from "react";
 import { Plus, Trash2, Check, RotateCcw, CreditCard, Pencil, X } from "lucide-react";
 import { api } from "../api/api.js";
 import { Card } from "../components/ui/Card.jsx";
+import { Amount } from "../components/ui/Amount.jsx";
 import { Spinner } from "../components/ui/Spinner.jsx";
 import { Empty } from "../components/ui/Empty.jsx";
 import { Modal } from "../components/ui/Modal.jsx";
 import { Field } from "../components/ui/Field.jsx";
-import { money, shortDate, todayISO, daysBetween } from "../utils/format.js";
+import { shortDate, todayISO, daysBetween } from "../utils/format.js";
 
 const emptyForm = { creditor_name: "", amount: "", due_date: todayISO() };
 
@@ -104,7 +105,7 @@ export default function Debts() {
       <div className="grid-4">
         <div className="hero" style={{ gridColumn: "span 2" }}>
           <div className="label">Total adeudado</div>
-          <div className="value num">{money(totalPending)}</div>
+          <div className="value num"><Amount value={totalPending} /></div>
           <div className="foot">{debts.filter((d) => !d.is_paid).length} deudas pendientes</div>
         </div>
         <div className="stat">
@@ -163,8 +164,8 @@ export default function Debts() {
                 {d.is_paid ? <span className="chip ok">Pagada</span>
                   : isOverdue(d) ? <span className="chip danger">Vencida</span>
                   : <span className="chip warn">Pendiente</span>}
-                <div className="num" style={{ width: 100, textAlign: "right" }}>{money(d.amount)}</div>
-                <div className="flex gap">
+                <div className="num" style={{ width: 100, textAlign: "right" }}><Amount value={d.amount} /></div>
+                <div className="row-actions">
                   <button className="btn btn-ghost btn-sm" onClick={() => togglePaid(d)} style={{ padding: 7 }} title={d.is_paid ? "Marcar como pendiente" : "Marcar como pagada"}>
                     {d.is_paid ? <RotateCcw size={14} /> : <Check size={14} />}
                   </button>

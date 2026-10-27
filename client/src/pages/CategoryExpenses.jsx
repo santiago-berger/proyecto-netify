@@ -3,10 +3,11 @@ import { Link, useParams, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Plus, Pencil, Trash2, Receipt, ChevronLeft, ChevronRight } from "lucide-react";
 import { api } from "../api/api.js";
 import { Card } from "../components/ui/Card.jsx";
+import { Amount } from "../components/ui/Amount.jsx";
 import { Spinner } from "../components/ui/Spinner.jsx";
 import { Empty } from "../components/ui/Empty.jsx";
 import { ExpenseModal } from "../components/ExpenseModal.jsx";
-import { money, longDate, todayISO } from "../utils/format.js";
+import { longDate, todayISO } from "../utils/format.js";
 
 const MONTH_NAMES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 
@@ -119,7 +120,7 @@ export default function CategoryExpenses() {
           </div>
           <div className="right">
             <div className="muted" style={{ fontSize: 12 }}>Total del mes</div>
-            <div className="num" style={{ fontSize: 22, fontWeight: 600 }}>{money(data.totalAmount)}</div>
+            <div className="num" style={{ fontSize: 22, fontWeight: 600 }}><Amount value={data.totalAmount} /></div>
           </div>
         </div>
       </div>
@@ -152,8 +153,8 @@ export default function CategoryExpenses() {
                     <div className="r-title">{e.description}</div>
                     <div className="r-sub">{longDate(e.date)}</div>
                   </div>
-                  <div className="num" style={{ fontWeight: 600 }}>{money(e.amount)}</div>
-                  <div className="flex" style={{ gap: 6 }}>
+                  <div className="num" style={{ fontWeight: 600 }}><Amount value={e.amount} /></div>
+                  <div className="row-actions">
                     <button className="btn btn-ghost btn-sm" onClick={() => setModal({ expense: e })} style={{ padding: 7 }} title="Editar"><Pencil size={14} /></button>
                     <button className="btn btn-danger btn-sm" onClick={() => remove(e.id)} style={{ padding: 7 }} title="Eliminar"><Trash2 size={14} /></button>
                   </div>

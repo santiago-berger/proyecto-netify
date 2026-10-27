@@ -5,7 +5,7 @@ import { Modal } from "./ui/Modal.jsx";
 import { Field } from "./ui/Field.jsx";
 import { todayISO } from "../utils/format.js";
 
-export const PALETTE = ["#0edfdc", "#7c5cff", "#ffb020", "#ff5c8a", "#3ddc84", "#4d9dff", "#c86bfa", "#8fa3ad"];
+export const PALETTE = ["#3fc9c5", "#8f84e0", "#dcb377", "#d98fa3", "#7fc8a4", "#7aa6dc", "#b593dc", "#8fa3ad"];
 
 // create / edit form for an expense, shared by "Gastos" and the category detail page
 export const ExpenseModal = ({ expense, initialDate, initialCategoryId, categories, onCategoriesChange, onClose, onSaved }) => {

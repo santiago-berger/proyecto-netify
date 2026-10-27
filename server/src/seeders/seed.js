@@ -8,16 +8,16 @@ import {
 } from "../models/index.js";
 import { hashPassword } from "../helpers/bcrypt.helper.js";
 
-/* Categorías básicas (GF-5). Colores dentro de la paleta azul/gris. */
+/* Categorías básicas (GF-5). Colores pastel y desaturados, distinguibles entre sí. */
 const CATEGORIES = [
-  { name: "Alimentos", icon: "utensils", color: "#0edfdc" },
-  { name: "Transporte", icon: "bus", color: "#0bb8b6" },
-  { name: "Vivienda", icon: "home", color: "#6fe9e7" },
-  { name: "Servicios", icon: "plug", color: "#0a9694" },
-  { name: "Salud", icon: "heart-pulse", color: "#4bd6d3" },
-  { name: "Educación", icon: "graduation-cap", color: "#2bbfbc" },
-  { name: "Ocio", icon: "gamepad-2", color: "#a8f2f0" },
-  { name: "Otros", icon: "ellipsis", color: "#7f9c9a" },
+  { name: "Alimentos", icon: "utensils", color: "#3fc9c5" },
+  { name: "Transporte", icon: "bus", color: "#7aa6dc" },
+  { name: "Vivienda", icon: "home", color: "#8f84e0" },
+  { name: "Servicios", icon: "plug", color: "#dcb377" },
+  { name: "Salud", icon: "heart-pulse", color: "#7fc8a4" },
+  { name: "Educación", icon: "graduation-cap", color: "#d98fa3" },
+  { name: "Ocio", icon: "gamepad-2", color: "#b593dc" },
+  { name: "Otros", icon: "ellipsis", color: "#8fa3ad" },
 ];
 
 /*

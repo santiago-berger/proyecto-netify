@@ -50,7 +50,7 @@ export default function Learn() {
           <div className="flex between center">
             <span className="chip teal">{selected.topic}</span>
             <button className="btn btn-ghost btn-sm" onClick={() => toggleFav(selected.id)}>
-              <Star size={15} fill={favorites.includes(selected.id) ? "#0edfdc" : "none"} color="#0edfdc" />
+              <Star size={15} fill={favorites.includes(selected.id) ? "#3fc9c5" : "none"} color="#3fc9c5" />
               {favorites.includes(selected.id) ? "Guardado" : "Guardar"}
             </button>
           </div>
@@ -100,7 +100,7 @@ export default function Learn() {
                 <span className="chip teal">{a.topic}</span>
                 <button className="btn btn-ghost btn-sm" style={{ padding: 6 }}
                   onClick={(e) => { e.stopPropagation(); toggleFav(a.id); }}>
-                  <Star size={15} fill={favorites.includes(a.id) ? "#0edfdc" : "none"} color="#0edfdc" />
+                  <Star size={15} fill={favorites.includes(a.id) ? "#3fc9c5" : "none"} color="#3fc9c5" />
                 </button>
               </div>
               <h3 style={{ margin: "12px 0 6px", fontSize: 16 }}>{a.title}</h3>

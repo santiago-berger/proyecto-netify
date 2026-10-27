@@ -268,8 +268,8 @@ export const seedSampleUser = async () => {
 
   // own categories of this user, on top of the base ones
   await Category.bulkCreate([
-    { name: "Mascotas", icon: "paw-print", color: "#ffb020", user_id: user.id },
-    { name: "Gimnasio", icon: "dumbbell", color: "#ff5c8a", user_id: user.id },
+    { name: "Mascotas", icon: "paw-print", color: "#dcb377", user_id: user.id },
+    { name: "Gimnasio", icon: "dumbbell", color: "#d98fa3", user_id: user.id },
   ]);
   const categories = await Category.findAll({
     where: { [Op.or]: [{ user_id: null }, { user_id: user.id }] },
@@ -278,8 +278,8 @@ export const seedSampleUser = async () => {
 
   // personal colors for two base categories
   await CategoryColor.bulkCreate([
-    { user_id: user.id, category_id: categoryIds["Ocio"], color: "#c86bfa" },
-    { user_id: user.id, category_id: categoryIds["Transporte"], color: "#4d9dff" },
+    { user_id: user.id, category_id: categoryIds["Ocio"], color: "#b593dc" },
+    { user_id: user.id, category_id: categoryIds["Transporte"], color: "#7aa6dc" },
   ]);
 
   const expenses = buildExpenses(user.id, categoryIds, today);

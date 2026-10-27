@@ -2,10 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import { Save, Camera, SlidersHorizontal, Check } from "lucide-react";
 import { api } from "../api/api.js";
 import { Card } from "../components/ui/Card.jsx";
+import { Amount } from "../components/ui/Amount.jsx";
 import { Spinner } from "../components/ui/Spinner.jsx";
 import { Field } from "../components/ui/Field.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
-import { money } from "../utils/format.js";
 import { TOOLS } from "../utils/modules.js";
 
 export default function Profile() {
@@ -111,7 +111,7 @@ export default function Profile() {
           <div className="grow">
             <h2 style={{ fontSize: 20 }}>{form.first_name} {form.last_name}</h2>
             <div className="muted" style={{ fontSize: 13 }}>@{user?.username} · {user?.email}</div>
-            <div className="chip teal" style={{ marginTop: 8 }}>Ingreso ref.: {money(form.monthly_income)}</div>
+            <div className="chip teal" style={{ marginTop: 8 }}>Ingreso ref.: <Amount value={form.monthly_income} /></div>
           </div>
           <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={onPickImage} />
         </div>

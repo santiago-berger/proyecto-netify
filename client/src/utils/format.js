@@ -1,10 +1,10 @@
-// formatea números como pesos argentinos
+// formatea números como pesos argentinos, sin espacio después del signo: $1.169.900
 export const money = (n) =>
   new Intl.NumberFormat("es-AR", {
     style: "currency",
     currency: "ARS",
     maximumFractionDigits: 0,
-  }).format(Number(n) || 0);
+  }).format(Number(n) || 0).replace(/\s/g, "");
 
 // convierte "2026-09-14" en un Date local (sin corrimiento de zona horaria)
 const parseLocal = (d) => {

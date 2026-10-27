@@ -3,11 +3,12 @@ import { Link } from "react-router-dom";
 import { Plus, Pencil, Trash2, ChevronLeft, ChevronRight, CalendarDays } from "lucide-react";
 import { api } from "../api/api.js";
 import { Card } from "../components/ui/Card.jsx";
+import { Amount } from "../components/ui/Amount.jsx";
 import { Spinner } from "../components/ui/Spinner.jsx";
 import { Empty } from "../components/ui/Empty.jsx";
 import { Modal } from "../components/ui/Modal.jsx";
 import { Field } from "../components/ui/Field.jsx";
-import { money, longDate, todayISO } from "../utils/format.js";
+import { longDate, todayISO } from "../utils/format.js";
 
 const MONTH_NAMES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 const WEEK_DAYS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
@@ -208,9 +209,9 @@ export default function Calendar() {
                   {e.kind === "debt" && <div className="r-sub">Vencimiento de deuda · <Link to="/deudas" style={{ color: "var(--teal-200)" }}>ver deudas</Link></div>}
                 </div>
                 <span className={`chip ${(EVENT_TYPES[e.type] || EVENT_TYPES.other).chip || ""}`}>{(EVENT_TYPES[e.type] || EVENT_TYPES.other).label}</span>
-                {e.amount != null && <div className="num" style={{ width: 100, textAlign: "right" }}>{money(e.amount)}</div>}
+                {e.amount != null && <div className="num" style={{ width: 100, textAlign: "right" }}><Amount value={e.amount} /></div>}
                 {e.kind === "reminder" && (
-                  <div className="flex gap">
+                  <div className="row-actions">
                     <button className="btn btn-ghost btn-sm" onClick={() => openEdit(e)} style={{ padding: 7 }} title="Editar"><Pencil size={14} /></button>
                     <button className="btn btn-danger btn-sm" onClick={() => remove(e.id)} style={{ padding: 7 }} title="Eliminar"><Trash2 size={14} /></button>
                   </div>

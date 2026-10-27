@@ -2,12 +2,12 @@ import { useEffect, useState } from "react";
 import { Plus, Trash2, Wallet, Pencil } from "lucide-react";
 import { api } from "../api/api.js";
 import { Card } from "../components/ui/Card.jsx";
+import { Amount } from "../components/ui/Amount.jsx";
 import { Spinner } from "../components/ui/Spinner.jsx";
 import { Empty } from "../components/ui/Empty.jsx";
 import { Modal } from "../components/ui/Modal.jsx";
 import { Field } from "../components/ui/Field.jsx";
 import { Progress } from "../components/ui/Progress.jsx";
-import { money } from "../utils/format.js";
 
 const MONTH_NAMES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 
@@ -126,10 +126,10 @@ export default function Budgets() {
                     </div>
                   </div>
                   <div className="flex between mt" style={{ fontSize: 12.5 }}>
-                    <span className="muted num">{money(spent)} gastado</span>
-                    <span className="num">{money(b.amount_limit)}</span>
+                    <span className="muted num"><Amount value={spent} /> gastado</span>
+                    <span className="num"><Amount value={b.amount_limit} /></span>
                   </div>
-                  <div className="progress mt"><Progress percent={percent} state={state} /></div>
+                  <div className="mt"><Progress percent={percent} state={state} /></div>
                   <div className="right muted num" style={{ fontSize: 12, marginTop: 6 }}>{percent}%</div>
                 </div>
               );

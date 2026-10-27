@@ -12,12 +12,13 @@ import { api } from "../api/api.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import { getPreference } from "../utils/preferences.js";
 import { Card } from "../components/ui/Card.jsx";
+import { Amount } from "../components/ui/Amount.jsx";
 import { Spinner } from "../components/ui/Spinner.jsx";
 import { Empty } from "../components/ui/Empty.jsx";
 import { Progress } from "../components/ui/Progress.jsx";
 import { money, MONTHS } from "../utils/format.js";
 
-const TEALS = ["#0edfdc", "#7c5cff", "#ffb020", "#ff5c8a", "#3ddc84", "#4d9dff", "#c86bfa", "#8fa3ad"];
+const TEALS = ["#3fc9c5", "#8f84e0", "#dcb377", "#d98fa3", "#7fc8a4", "#7aa6dc", "#b593dc", "#8fa3ad"];
 const MONTHS_LONG = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 const TOP_BUDGETS = 4;
 const emptySummary = { total: 0, byCategory: [] };
@@ -127,10 +128,10 @@ export default function Dashboard() {
   const colorById = Object.fromEntries(categories.map((cat) => [cat.id, cat.color]));
   const categoryColor = (c, i) => colorById[c.category_id] || c.color || TEALS[i % TEALS.length];
   const tooltipProps = {
-    contentStyle: { background: "#101d1f", border: "1px solid #24393b", borderRadius: 10 },
-    itemStyle: { color: "#eaf5f4" },
-    labelStyle: { color: "#8ca3b0" },
-    cursor: { fill: "rgba(14,223,220,.06)" },
+    contentStyle: { background: "#1d2229", border: "none", borderRadius: 10, boxShadow: "0 8px 24px rgba(0,0,0,.35)" },
+    itemStyle: { color: "#e7ebef" },
+    labelStyle: { color: "#98a2ad" },
+    cursor: { stroke: "rgba(255,255,255,.08)" },
   };
   const showSideColumn = showBudgets || (showGoals && topGoal);
 
@@ -140,7 +141,7 @@ export default function Dashboard() {
       <div className={showDebts ? "grid-3" : "grid-2"}>
         <div className="hero">
           <div className="label">Gasto de {MONTHS_LONG[current.month - 1]}</div>
-          <div className="value num">{money(spent)}</div>
+          <div className="value num"><Amount value={spent} /></div>
           <div className="foot">
             {change === null
               ? "Sin datos del mes anterior para comparar"
@@ -152,7 +153,7 @@ export default function Dashboard() {
           <div className="label"><Wallet size={15} /> Disponible del mes</div>
           {income > 0 ? (
             <>
-              <div className="value num" style={{ color: available < 0 ? "var(--danger)" : undefined }}>{money(available)}</div>
+              <div className="value num" style={{ color: available < 0 ? "var(--danger)" : undefined }}><Amount value={available} /></div>
               <div style={{ marginTop: 10 }}><Progress percent={usedPct} state={usedPct >= 100 ? "excedido" : usedPct >= 80 ? "alerta" : "ok"} /></div>
               <div className="muted" style={{ fontSize: 12, marginTop: 6 }}>Usaste el {usedPct}% de tu ingreso</div>
             </>
@@ -167,7 +168,7 @@ export default function Dashboard() {
         {showDebts && (
           <div className="stat">
             <div className="label"><CreditCard size={15} /> Deuda pendiente</div>
-            <div className="value num">{money(debts.totalPending)}</div>
+            <div className="value num"><Amount value={debts.totalPending} /></div>
             {overdue.length > 0 && (
               <Link to="/deudas" className="chip danger" style={{ marginTop: 10, textDecoration: "none" }} title="Ver deudas vencidas">
                 <AlertCircle size={13} />
@@ -217,7 +218,7 @@ export default function Dashboard() {
                       <span className="cat-dot" style={{ background: categoryColor(c, i) }} />
                       <div className="grow r-title">{c.category}</div>
                       <div className="num muted" style={{ fontSize: 12.5 }}>{pct}%</div>
-                      <div className="num" style={{ minWidth: 84, textAlign: "right" }}>{money(c.total)}</div>
+                      <div className="num" style={{ minWidth: 84, textAlign: "right" }}><Amount value={c.total} /></div>
                     </div>
                   );
                 })}
@@ -232,15 +233,15 @@ export default function Dashboard() {
               <AreaChart data={trend} margin={{ left: 0, right: 8, top: 8, bottom: 0 }}>
                 <defs>
                   <linearGradient id="az" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#0edfdc" stopOpacity={0.5} />
-                    <stop offset="100%" stopColor="#0edfdc" stopOpacity={0} />
+                    <stop offset="0%" stopColor="#3fc9c5" stopOpacity={0.1} />
+                    <stop offset="100%" stopColor="#3fc9c5" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid stroke="#23282e" vertical={false} />
-                <XAxis dataKey="mes" stroke="#5f7280" fontSize={11} tickLine={false} axisLine={false} interval="preserveStartEnd" minTickGap={4} />
-                <YAxis stroke="#5f7280" fontSize={11} tickLine={false} axisLine={false} width={44} tickFormatter={compactMoney} />
+                <CartesianGrid stroke="rgba(255,255,255,.05)" vertical={false} />
+                <XAxis dataKey="mes" stroke="#6a7480" fontSize={11} tickLine={false} axisLine={false} interval="preserveStartEnd" minTickGap={4} />
+                <YAxis stroke="#6a7480" fontSize={11} tickLine={false} axisLine={false} width={44} tickFormatter={compactMoney} />
                 <Tooltip formatter={(v) => money(v)} {...tooltipProps} />
-                <Area type="monotone" dataKey="total" stroke="#0edfdc" strokeWidth={2} fill="url(#az)" connectNulls={false} />
+                <Area type="monotone" dataKey="total" stroke="#3fc9c5" strokeWidth={2.5} fill="url(#az)" activeDot={{ r: 4, strokeWidth: 0 }} connectNulls={false} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -263,7 +264,7 @@ export default function Dashboard() {
                       <div key={b.budget_id}>
                         <div className="flex between center" style={{ fontSize: 13, marginBottom: 6 }}>
                           <span className="r-title">{b.category}</span>
-                          <span className="num muted" style={{ fontSize: 12.5 }}>{money(b.spent)} / {money(b.limit)}</span>
+                          <span className="num muted" style={{ fontSize: 12.5 }}><Amount value={b.spent} /> / <Amount value={b.limit} /></span>
                         </div>
                         <Progress percent={b.percent} state={b.state} />
                       </div>
@@ -281,8 +282,8 @@ export default function Dashboard() {
                 </div>
                 <div className="progress mt"><span style={{ width: `${topGoal.percent}%` }} /></div>
                 <div className="flex between mt muted" style={{ fontSize: 12.5 }}>
-                  <span className="num">{money(topGoal.saved)}</span>
-                  <span className="num">{money(topGoal.target_amount)}</span>
+                  <span className="num"><Amount value={topGoal.saved} /></span>
+                  <span className="num"><Amount value={topGoal.target_amount} /></span>
                 </div>
               </Card>
             )}

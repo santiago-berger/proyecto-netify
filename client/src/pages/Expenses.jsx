@@ -5,10 +5,11 @@ import {
 } from "lucide-react";
 import { api } from "../api/api.js";
 import { Card } from "../components/ui/Card.jsx";
+import { Amount } from "../components/ui/Amount.jsx";
 import { Spinner } from "../components/ui/Spinner.jsx";
 import { Empty } from "../components/ui/Empty.jsx";
 import { ExpenseModal, PALETTE } from "../components/ExpenseModal.jsx";
-import { money, todayISO } from "../utils/format.js";
+import { todayISO } from "../utils/format.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import { getPreference, savePreference } from "../utils/preferences.js";
 
@@ -171,7 +172,7 @@ export default function Expenses() {
           </div>
           <div className="right">
             <div className="muted" style={{ fontSize: 12 }}>Total del mes</div>
-            <div className="num" style={{ fontSize: 22, fontWeight: 600 }}>{money(total)}</div>
+            <div className="num" style={{ fontSize: 22, fontWeight: 600 }}><Amount value={total} /></div>
             <div className="muted" style={{ fontSize: 12 }}>
               {expenses.length} {expenses.length === 1 ? "gasto" : "gastos"} en {groups.length} {groups.length === 1 ? "categoría" : "categorías"}
             </div>
@@ -208,7 +209,7 @@ export default function Expenses() {
                     <div className="r-title" style={{ fontWeight: 600 }}>{g.name}</div>
                     <div className="r-sub">{g.count} {g.count === 1 ? "gasto" : "gastos"} · {share}% del mes</div>
                   </div>
-                  <div className="num" style={{ fontWeight: 600, fontSize: 16 }}>{money(g.total)}</div>
+                  <div className="num" style={{ fontWeight: 600, fontSize: 16 }}><Amount value={g.total} /></div>
                 </div>
 
                 {colorPickerFor === g.id && (
@@ -223,7 +224,7 @@ export default function Expenses() {
                   </div>
                 )}
 
-                <div className="progress" style={{ height: 5, margin: "12px 0 10px" }}>
+                <div className="progress" style={{ margin: "14px 0 12px" }}>
                   <span style={{ width: `${share}%`, background: g.color }} />
                 </div>
 
