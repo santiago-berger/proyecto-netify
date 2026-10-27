@@ -6,7 +6,7 @@ import {
 } from "recharts";
 import {
   CreditCard, CalendarClock, CalendarDays, Receipt, ChevronLeft, ChevronRight, AlertCircle,
-  Wallet, TrendingUp, PiggyBank, Gauge,
+  Wallet, PiggyBank, Gauge,
 } from "lucide-react";
 import { api } from "../api/api.js";
 import { useAuth } from "../context/AuthContext.jsx";
@@ -109,8 +109,6 @@ export default function Dashboard() {
   const income = Number(user?.profile?.monthly_income) || 0;
   const available = income - spent;
   const usedPct = income > 0 ? Math.round((spent / income) * 100) : 0;
-  const daysInMonth = new Date(current.year, current.month, 0).getDate();
-  const projection = (spent / now.getDate()) * daysInMonth;
 
   // ---- agenda: deudas vencidas + próximos días (deudas y recordatorios) ----
   const overdue = showDebts ? upcoming.overdue : [];
@@ -147,7 +145,7 @@ export default function Dashboard() {
   return (
     <div className="page-grid">
       {/* ---------- indicadores ---------- */}
-      <div className={showDebts ? "grid-4" : "grid-3"}>
+      <div className={showDebts ? "grid-3" : "grid-2"}>
         <div className="hero">
           <div className="label">Gasto de {MONTHS_LONG[current.month - 1]}</div>
           <div className="value num">{money(spent)}</div>
@@ -171,18 +169,6 @@ export default function Dashboard() {
               <div className="value num muted">—</div>
               <Link to="/perfil" className="muted" style={{ fontSize: 12, color: "var(--teal-200)" }}>Cargá tu ingreso mensual en Perfil</Link>
             </>
-          )}
-        </div>
-
-        <div className="stat">
-          <div className="label"><TrendingUp size={15} /> Proyección a fin de mes</div>
-          <div className="value num">{money(projection)}</div>
-          {spent === 0 ? (
-            <div className="muted" style={{ fontSize: 12, marginTop: 6 }}>Todavía no hay gastos este mes</div>
-          ) : income > 0 && projection > income ? (
-            <span className="chip danger" style={{ marginTop: 8 }}><AlertCircle size={13} /> Supera tu ingreso</span>
-          ) : (
-            <div className="muted" style={{ fontSize: 12, marginTop: 6 }}>Si seguís al ritmo actual</div>
           )}
         </div>
 
