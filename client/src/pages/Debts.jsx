@@ -1,14 +1,33 @@
 import { useEffect, useState } from "react";
-import { Plus, Trash2, Check, RotateCcw, CreditCard, Pencil } from "lucide-react";
+import { Plus, Trash2, Check, RotateCcw, CreditCard, Pencil, X } from "lucide-react";
 import { api } from "../api/api.js";
 import { Card } from "../components/ui/Card.jsx";
 import { Spinner } from "../components/ui/Spinner.jsx";
 import { Empty } from "../components/ui/Empty.jsx";
 import { Modal } from "../components/ui/Modal.jsx";
 import { Field } from "../components/ui/Field.jsx";
-import { money, shortDate, todayISO } from "../utils/format.js";
+import { money, shortDate, todayISO, daysBetween } from "../utils/format.js";
 
 const emptyForm = { creditor_name: "", amount: "", due_date: todayISO() };
+
+const STATUS_FILTERS = [
+  { key: "all", label: "Todas" },
+  { key: "pending", label: "Pendientes" },
+  { key: "overdue", label: "Vencidas" },
+  { key: "paid", label: "Pagadas" },
+];
+
+const getStatus = (d) => {
+  if (d.is_paid) return "paid";
+  return daysBetween(todayISO(), d.due_date) < 0 ? "overdue" : "pending";
+};
+
+const distanceLabel = (days) => {
+  if (days === 0) return "vence ese mismo día";
+  const n = Math.abs(days);
+  const unit = n === 1 ? "día" : "días";
+  return days > 0 ? `${n} ${unit} después` : `${n} ${unit} antes`;
+};
 
 export default function Debts() {
   const [loading, setLoading] = useState(true);
@@ -19,6 +38,8 @@ export default function Debts() {
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState(null);
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [refDate, setRefDate] = useState("");
 
   const load = async () => {
     const { data } = await api.get("/debts");
@@ -70,7 +91,13 @@ export default function Debts() {
 
   if (loading) return <Spinner />;
 
-  const isOverdue = (d) => !d.is_paid && new Date(d.due_date) < new Date(todayISO());
+  const isOverdue = (d) => getStatus(d) === "overdue";
+
+  // status filter first, then (optionally) order by distance to the chosen date
+  const visibleDebts = debts
+    .filter((d) => statusFilter === "all" || getStatus(d) === statusFilter)
+    .map((d) => ({ ...d, distance: refDate ? daysBetween(refDate, d.due_date) : null }))
+    .sort((a, b) => (refDate ? Math.abs(a.distance) - Math.abs(b.distance) : 0));
 
   return (
     <div className="page-grid">
@@ -95,17 +122,43 @@ export default function Debts() {
         sub="Seguí a quién le debés y cuándo vence cada pago"
         action={<button className="btn btn-primary btn-sm" onClick={openNew}><Plus size={15} /> Nueva deuda</button>}
       >
+        {debts.length > 0 && (
+          <div className="flex between center" style={{ flexWrap: "wrap", gap: 12, marginBottom: 6 }}>
+            <div className="section-tabs" style={{ marginBottom: 0 }}>
+              {STATUS_FILTERS.map((f) => (
+                <div key={f.key} className={`tab ${statusFilter === f.key ? "active" : ""}`} onClick={() => setStatusFilter(f.key)}>
+                  {f.label}
+                </div>
+              ))}
+            </div>
+            <div className="flex center gap">
+              <label className="muted" style={{ fontSize: 12.5, whiteSpace: "nowrap" }}>Más cercanas a</label>
+              <input className="input" type="date" value={refDate} onChange={(e) => setRefDate(e.target.value)} style={{ width: 160 }} />
+              {refDate && (
+                <button className="btn btn-ghost btn-sm" onClick={() => setRefDate("")} style={{ padding: 7 }} title="Quitar fecha">
+                  <X size={14} />
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
         {debts.length === 0 ? (
           <Empty icon={CreditCard} title="Sin deudas registradas" hint="Buenas noticias. Si tenés alguna, registrala acá." />
+        ) : visibleDebts.length === 0 ? (
+          <Empty icon={CreditCard} title="No hay deudas con este filtro" />
         ) : (
           <div className="list">
-            {debts.map((d) => (
+            {visibleDebts.map((d) => (
               <div className="row" key={d.id}>
                 <div className="grow">
                   <div className="r-title" style={{ textDecoration: d.is_paid ? "line-through" : "none", opacity: d.is_paid ? 0.6 : 1 }}>
                     {d.creditor_name}
                   </div>
-                  <div className="r-sub">Vence el {shortDate(d.due_date)}</div>
+                  <div className="r-sub">
+                    Vence el {shortDate(d.due_date)}
+                    {refDate && <> · {distanceLabel(d.distance)}</>}
+                  </div>
                 </div>
                 {d.is_paid ? <span className="chip ok">Pagada</span>
                   : isOverdue(d) ? <span className="chip danger">Vencida</span>

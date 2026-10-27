@@ -13,6 +13,10 @@ const parseLocal = (d) => {
   return new Date(y, m - 1, day);
 };
 
+// whole days from date a to date b (negative if b is before a)
+export const daysBetween = (a, b) =>
+  Math.round((parseLocal(b) - parseLocal(a)) / 86400000);
+
 export const shortDate = (d) =>
   parseLocal(d).toLocaleDateString("es-AR", { day: "2-digit", month: "short" });
 
