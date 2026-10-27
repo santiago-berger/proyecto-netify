@@ -1,7 +1,7 @@
 import { NavLink } from "react-router-dom";
 import {
   LayoutDashboard, Receipt, Wallet, CreditCard, PiggyBank,
-  Calculator, BookOpen, LogOut, ChevronLeft, ChevronRight,
+  Calculator, BookOpen, LogOut, ChevronLeft, ChevronRight, CalendarDays,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext.jsx";
 
@@ -11,6 +11,7 @@ const groups = [
     items: [
       { to: "/", icon: LayoutDashboard, text: "Resumen", end: true, key: null },
       { to: "/gastos", icon: Receipt, text: "Gastos", key: null },
+      { to: "/calendario", icon: CalendarDays, text: "Calendario", key: null },
     ],
   },
   {
