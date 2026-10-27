@@ -1,15 +1,22 @@
 import { useEffect, useRef, useState } from "react";
-import { Save, Camera, SlidersHorizontal, Check } from "lucide-react";
+import { Save, Camera, SlidersHorizontal, Check, Moon, Sun, Palette } from "lucide-react";
 import { api } from "../api/api.js";
 import { Card } from "../components/ui/Card.jsx";
 import { Amount } from "../components/ui/Amount.jsx";
 import { Spinner } from "../components/ui/Spinner.jsx";
 import { Field } from "../components/ui/Field.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
+import { useTheme } from "../context/ThemeContext.jsx";
 import { TOOLS } from "../utils/modules.js";
+
+const THEMES = [
+  { key: "dark", label: "Modo oscuro", icon: Moon },
+  { key: "light", label: "Modo claro", icon: Sun },
+];
 
 export default function Profile() {
   const { user, reload, modules, updateModules } = useAuth();
+  const { theme, setTheme } = useTheme();
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState({ first_name: "", last_name: "", monthly_income: "", avatar_url: "" });
   const [errors, setErrors] = useState({});
@@ -166,6 +173,30 @@ export default function Profile() {
           })}
         </div>
         {prefsOk && <div className="chip ok mt">Preferencias actualizadas</div>}
+      </Card>
+
+      <Card
+        title="Apariencia"
+        sub="Elegí cómo querés ver la aplicación"
+        action={<Palette size={17} className="muted" />}
+      >
+        <div className="theme-options">
+          {THEMES.map((t) => (
+            <button
+              key={t.key}
+              type="button"
+              className={`theme-option ${theme === t.key ? "active" : ""}`}
+              onClick={() => setTheme(t.key)}
+              aria-pressed={theme === t.key}
+            >
+              <span className={`theme-preview ${t.key}`}><span /><span /></span>
+              <span className="flex center" style={{ gap: 8 }}>
+                <t.icon size={15} /> {t.label}
+                {theme === t.key && <Check size={14} style={{ marginLeft: "auto" }} />}
+              </span>
+            </button>
+          ))}
+        </div>
       </Card>
     </div>
   );

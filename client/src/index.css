@@ -397,6 +397,21 @@ a { color: inherit; text-decoration: none; }
 .swatch-custom { background: conic-gradient(#ff5c8a, #ffb020, #3ddc84, #0edfdc, #4d9dff, #c86bfa, #ff5c8a); }
 .swatch-custom input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; border: none; padding: 0; }
 
+/* ---------- apariencia (perfil) ---------- */
+.theme-options { display: grid; grid-template-columns: repeat(2, minmax(0, 220px)); gap: 14px; }
+.theme-option { display: flex; flex-direction: column; gap: 10px; padding: 12px; border-radius: var(--radius-sm); background: var(--overlay-1); border: 1px solid transparent; color: var(--text); font: inherit; font-size: 13px; font-weight: 500; cursor: pointer; text-align: left; transition: background .15s, border-color .15s; }
+.theme-option:hover { background: var(--overlay-2); }
+.theme-option.active { border-color: var(--teal); background: rgba(63,201,197,.08); }
+/* mini preview of each theme: a background with a lighter panel */
+.theme-preview { display: flex; gap: 6px; padding: 10px; height: 64px; border-radius: 8px; }
+.theme-preview span { flex: 1; border-radius: 5px; }
+.theme-preview.dark { background: #14181d; }
+.theme-preview.dark span { background: #1d2229; }
+.theme-preview.dark span:first-child { flex: 0 0 26%; background: #111418; }
+.theme-preview.light { background: #f3f5f7; border: 1px solid #e3e7eb; }
+.theme-preview.light span { background: #ffffff; }
+.theme-preview.light span:first-child { flex: 0 0 26%; background: #ffffff; box-shadow: 1px 0 0 #e3e7eb; }
+
 /* ---------- notificaciones ---------- */
 .topbar-right { display: flex; align-items: center; gap: 14px; }
 .notif { position: relative; }
