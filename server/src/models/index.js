@@ -9,6 +9,7 @@ import { SavingGoal } from "./savingGoal.model.js";
 import { SavingContribution } from "./savingContribution.model.js";
 import { Article } from "./article.model.js";
 import { Favorite } from "./favorite.model.js";
+import { Reminder } from "./reminder.model.js";
 
 /* =========================================================
    RELACIONES
@@ -50,6 +51,10 @@ SavingGoal.belongsTo(User, { foreignKey: "user_id", as: "user" });
 SavingGoal.hasMany(SavingContribution, { foreignKey: "goal_id", as: "contributions", onDelete: "CASCADE" });
 SavingContribution.belongsTo(SavingGoal, { foreignKey: "goal_id", as: "goal" });
 
+// 1:N  User - Reminder (recordatorios del calendario)
+User.hasMany(Reminder, { foreignKey: "user_id", as: "reminders", onDelete: "CASCADE" });
+Reminder.belongsTo(User, { foreignKey: "user_id", as: "user" });
+
 // N:M  User - Article  (a traves de Favorite)
 User.belongsToMany(Article, { through: Favorite, foreignKey: "user_id", otherKey: "article_id", as: "favoriteArticles" });
 Article.belongsToMany(User, { through: Favorite, foreignKey: "article_id", otherKey: "user_id", as: "usersWhoFaved" });
@@ -66,4 +71,5 @@ export {
   SavingContribution,
   Article,
   Favorite,
+  Reminder,
 };

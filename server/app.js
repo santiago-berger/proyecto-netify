@@ -15,6 +15,7 @@ import { debtRouter } from "./src/routes/debt.routes.js";
 import { savingGoalRouter } from "./src/routes/savingGoal.routes.js";
 import { articleRouter } from "./src/routes/article.routes.js";
 import { favoriteRouter } from "./src/routes/favorite.routes.js";
+import { reminderRouter } from "./src/routes/reminder.routes.js";
 
 dotenv.config();
 
@@ -42,6 +43,7 @@ app.use("/api", debtRouter);
 app.use("/api", savingGoalRouter);
 app.use("/api", articleRouter);
 app.use("/api", favoriteRouter);
+app.use("/api", reminderRouter);
 
 app.listen(PORT, async () => {
   await connectDB();
