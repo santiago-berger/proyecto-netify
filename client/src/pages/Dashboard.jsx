@@ -8,6 +8,8 @@ import {
   TrendingDown, CreditCard, PiggyBank, CalendarClock, Receipt, ChevronLeft, ChevronRight, AlertCircle,
 } from "lucide-react";
 import { api } from "../api/api.js";
+import { useAuth } from "../context/AuthContext.jsx";
+import { getPreference } from "../utils/preferences.js";
 import { Card } from "../components/ui/Card.jsx";
 import { Spinner } from "../components/ui/Spinner.jsx";
 import { Empty } from "../components/ui/Empty.jsx";
@@ -21,6 +23,7 @@ const groupLabelStyle = {
 const MONTHS_LONG = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 
 export default function Dashboard() {
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const now = new Date();
   const [period, setPeriod] = useState({ month: now.getMonth() + 1, year: now.getFullYear() });
@@ -62,7 +65,9 @@ export default function Dashboard() {
 
   if (loading) return <Spinner />;
 
-  const topGoal = goals[0];
+  // the goal chosen in "Metas de ahorro", or the most recent one if none was chosen
+  const featuredId = getPreference(user?.id, "featured_goal");
+  const topGoal = goals.find((g) => g.id === featuredId) || goals[0];
   const upcomingCount = upcoming.upcoming.length;
   const overdueCount = upcoming.overdue.length;
 

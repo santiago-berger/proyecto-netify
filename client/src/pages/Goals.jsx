@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Plus, Trash2, PiggyBank, CircleDollarSign, Pencil, MinusCircle } from "lucide-react";
+import { Plus, Trash2, PiggyBank, CircleDollarSign, Pencil, MinusCircle, Star } from "lucide-react";
 import { api } from "../api/api.js";
 import { Card } from "../components/ui/Card.jsx";
 import { Spinner } from "../components/ui/Spinner.jsx";
@@ -7,8 +7,12 @@ import { Empty } from "../components/ui/Empty.jsx";
 import { Modal } from "../components/ui/Modal.jsx";
 import { Field } from "../components/ui/Field.jsx";
 import { money, todayISO } from "../utils/format.js";
+import { useAuth } from "../context/AuthContext.jsx";
+import { getPreference, savePreference } from "../utils/preferences.js";
 
 export default function Goals() {
+  const { user } = useAuth();
+  const [featuredId, setFeaturedId] = useState(() => getPreference(user?.id, "featured_goal"));
   const [loading, setLoading] = useState(true);
   const [goals, setGoals] = useState([]);
   const [openNew, setOpenNew] = useState(false);
@@ -113,6 +117,13 @@ export default function Goals() {
     }
   };
 
+  // the featured goal is the one shown on the dashboard
+  const toggleFeatured = (id) => {
+    const next = featuredId === id ? null : id;
+    setFeaturedId(next);
+    savePreference(user?.id, "featured_goal", next);
+  };
+
   const remove = async (id) => {
     if (!confirm("¿Eliminar esta meta?")) return;
     await api.delete(`/goals/${id}`);
@@ -154,9 +165,16 @@ export default function Goals() {
             {goals.map((g) => (
               <div className="card" key={g.id} style={{ background: "var(--panel-2)" }}>
                 <div className="flex between center">
-                  <div className="r-title">{g.name}</div>
+                  <div>
+                    <div className="r-title">{g.name}</div>
+                    {featuredId === g.id && <div className="r-sub" style={{ color: "var(--coin)", fontSize: 11.5 }}>Destacada en el resumen</div>}
+                  </div>
                   <div className="flex center gap">
                     {g.completed && <span className="chip ok">¡Lograda!</span>}
+                    <button className="btn btn-ghost btn-sm" onClick={() => toggleFeatured(g.id)} style={{ padding: 6, color: featuredId === g.id ? "var(--coin)" : undefined }}
+                      title={featuredId === g.id ? "Quitar del resumen" : "Mostrar en el resumen"}>
+                      <Star size={13} fill={featuredId === g.id ? "currentColor" : "none"} />
+                    </button>
                     <button className="btn btn-ghost btn-sm" onClick={() => openEdit(g)} style={{ padding: 6 }} title="Editar meta"><Pencil size={13} /></button>
                     <button className="btn btn-danger btn-sm" onClick={() => remove(g.id)} style={{ padding: 6 }}><Trash2 size={13} /></button>
                   </div>
