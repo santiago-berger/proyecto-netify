@@ -60,6 +60,94 @@ const ARTICLES = [
     content:
       "La tarjeta de crédito es una herramienta útil si se usa con cuidado. El punto clave es la fecha de vencimiento: si pagás el total del resumen, no pagás intereses. Si pagás solo el mínimo, el resto queda financiado a una tasa que suele ser muy alta, y esa deuda puede crecer mes a mes. Antes de comprar en cuotas, conviene mirar si tienen interés o si son 'sin interés', y sumar todas las cuotas que ya tenés comprometidas para los próximos meses. Una buena práctica es no gastar con la tarjeta más de lo que sabés que vas a poder pagar en su totalidad al vencimiento.",
   },
+  {
+    title: "TNA, TEA y CFT: cómo leer el costo de un préstamo",
+    summary:
+      "Las tres siglas que aparecen en cualquier préstamo y cuál conviene mirar para comparar.",
+    topic: "Préstamos",
+    content:
+      "Cuando pedís un préstamo vas a ver tres siglas. La TNA (Tasa Nominal Anual) es la tasa de interés 'de referencia': se divide por 12 para calcular el interés de cada mes, pero no tiene en cuenta que los intereses se van acumulando. La TEA (Tasa Efectiva Anual) sí lo considera, por eso siempre es mayor que la TNA y muestra mejor cuánto interés pagás en un año. El CFT (Costo Financiero Total) es el número más completo: además de los intereses suma impuestos como el IVA, comisiones, gastos de otorgamiento y seguros. Las entidades están obligadas a informarlo. Para comparar dos préstamos, mirá siempre el CFT: un préstamo con TNA más baja puede terminar siendo más caro si tiene muchos cargos extra.",
+  },
+  {
+    title: "Sistema francés: cómo se arma la cuota de tu préstamo",
+    summary:
+      "Por qué la cuota es siempre igual y qué parte de ella es interés y qué parte es capital.",
+    topic: "Préstamos",
+    content:
+      "La mayoría de los préstamos personales en Argentina usan el sistema francés: pagás una cuota fija todos los meses. Lo que cambia es su composición. Al principio, gran parte de la cuota se va en intereses, porque se calculan sobre todo el dinero que todavía debés; con el paso de los meses la deuda baja, el interés también, y una porción mayor de la cuota amortiza capital. Por eso, si cancelás un préstamo de forma anticipada en los primeros meses, el ahorro en intereses es mayor. Ojo: algunas entidades cobran un cargo por cancelación anticipada, así que conviene revisarlo en el contrato antes de firmar.",
+  },
+  {
+    title: "Cinco preguntas antes de pedir un préstamo",
+    summary:
+      "Un chequeo rápido para no tomar una deuda que después no puedas pagar.",
+    topic: "Préstamos",
+    content:
+      "Antes de endeudarte, hacete estas preguntas. Primero: ¿para qué lo necesito? No es lo mismo financiar una herramienta de trabajo que un gasto de consumo. Segundo: ¿cuánto representa la cuota de mi ingreso? Una referencia habitual es que el total de cuotas no supere el 30% de lo que cobrás. Tercero: ¿cuál es el CFT y cuánto voy a devolver en total? Multiplicá la cuota por la cantidad de meses y comparalo con lo que te prestan. Cuarto: ¿qué pasa si me atraso? Averiguá los intereses punitorios. Quinto: ¿comparé con otras entidades? Las condiciones cambian mucho entre bancos, billeteras virtuales y financieras, y unos minutos de comparación pueden ahorrarte bastante dinero.",
+  },
+  {
+    title: "Cómo armar tu primer presupuesto mensual",
+    summary:
+      "Cuatro pasos para pasar de 'no sé en qué se me va la plata' a tener un plan.",
+    topic: "Presupuesto",
+    content:
+      "Un presupuesto es simplemente un plan para tu dinero. Paso 1: anotá tu ingreso neto mensual, lo que efectivamente cobrás. Paso 2: listá tus gastos fijos, los que se repiten todos los meses, como alquiler, servicios, transporte y cuotas. Paso 3: estimá los gastos variables, como comida, salidas o ropa, mirando lo que gastaste los últimos dos o tres meses. Paso 4: restá todo del ingreso y decidí qué hacer con lo que sobra, idealmente una parte al ahorro. Si el número da negativo, el presupuesto te muestra dónde ajustar. Revisalo a fin de cada mes y corregilo: un presupuesto no es una cárcel, es una guía que se mejora con el tiempo.",
+  },
+  {
+    title: "Gastos hormiga: los pequeños consumos que suman",
+    summary:
+      "Café, delivery, suscripciones: por qué los gastos chicos pueden pesar más de lo que parece.",
+    topic: "Presupuesto",
+    content:
+      "Los gastos hormiga son consumos pequeños y frecuentes que, por separado, parecen insignificantes: un café, una gaseosa, un envío a domicilio, una suscripción que no usás. El problema es que se repiten y, sumados a lo largo del mes, pueden representar una parte importante de tu ingreso. Para detectarlos, registrá todos tus gastos durante algunas semanas, incluso los más chicos, y agrupalos. Muchas veces la sorpresa está en las suscripciones digitales que se debitan solas. No se trata de eliminar todos los gustos, sino de elegir conscientemente en cuáles vale la pena gastar y cuáles podés reducir sin extrañarlos.",
+  },
+  {
+    title: "Págate a vos primero: el ahorro automático",
+    summary:
+      "Separar el ahorro apenas cobrás es la forma más simple de que el hábito se sostenga.",
+    topic: "Ahorro",
+    content:
+      "La forma más común de intentar ahorrar es guardar 'lo que sobra' a fin de mes, y lo habitual es que no sobre nada. La estrategia de 'págate a vos primero' invierte el orden: apenas cobrás, separás un monto fijo para ahorro y vivís con el resto. Puede ser un porcentaje chico al comienzo, por ejemplo un 5% o un 10%; lo importante es la constancia. Si tu banco o billetera lo permite, programá una transferencia automática a otra cuenta o a una inversión el mismo día del cobro. Al no depender de tu fuerza de voluntad cada mes, el ahorro se vuelve un hábito y las metas avanzan sin que lo pienses.",
+  },
+  {
+    title: "Inflación: por qué tu dinero pierde valor",
+    summary:
+      "Qué es el poder adquisitivo y por qué conviene que tus ahorros no queden quietos.",
+    topic: "Ahorro",
+    content:
+      "La inflación es el aumento generalizado de los precios. Cuando los precios suben, con la misma cantidad de dinero podés comprar menos cosas: eso es la pérdida de poder adquisitivo. Si guardás pesos sin moverlos durante un año con inflación, al final vas a tener el mismo número de billetes, pero te van a alcanzar para menos. Por eso es importante comparar el rendimiento de tus ahorros con la inflación: si una inversión rinde menos que la inflación, en términos reales estás perdiendo. Esto no significa que haya que arriesgarse sin pensar, sino buscar alternativas reguladas que, al menos, ayuden a proteger el valor de tu dinero.",
+  },
+  {
+    title: "Plazo fijo: cómo funciona",
+    summary:
+      "Una de las formas más simples de hacer rendir tus ahorros, y las variantes que existen.",
+    topic: "Inversión",
+    content:
+      "Un plazo fijo es un depósito en un banco por un período determinado, como mínimo 30 días, a cambio de una tasa de interés que se conoce desde el principio. Al vencimiento recibís el capital más los intereses; si lo necesitás antes, en el plazo fijo tradicional no podés retirarlo. Existen variantes: el plazo fijo UVA ajusta el capital según la inflación, y algunos bancos ofrecen opciones precancelables con condiciones particulares. Los depósitos en entidades autorizadas por el BCRA cuentan con una garantía de depósitos hasta un monto máximo. Antes de constituirlo, compará la tasa con la inflación esperada para saber si tu dinero realmente está creciendo.",
+  },
+  {
+    title: "Fondos comunes de inversión para empezar",
+    summary:
+      "Qué es un FCI, qué tipos hay y qué tener en cuenta antes de invertir.",
+    topic: "Inversión",
+    content:
+      "Un fondo común de inversión (FCI) reúne el dinero de muchas personas para invertirlo en conjunto, administrado por profesionales y bajo la supervisión de la Comisión Nacional de Valores (CNV). Al invertir comprás 'cuotapartes' del fondo, cuyo valor sube o baja según el rendimiento de lo que el fondo tiene en cartera. Hay fondos para distintos perfiles: los de 'money market' suelen tener bajo riesgo y permiten retirar el dinero en el día, y otros invierten en bonos o acciones, con mayor potencial de ganancia pero también más riesgo. Importante: los FCI no son depósitos bancarios y no tienen rendimiento garantizado. Leé el reglamento del fondo y elegí según el plazo y el riesgo que estés dispuesto a asumir.",
+  },
+  {
+    title: "Central de Deudores: qué es tu historial crediticio",
+    summary:
+      "Cómo los bancos ven tu comportamiento de pago y cómo consultarlo gratis.",
+    topic: "Deudas",
+    content:
+      "La Central de Deudores del Sistema Financiero es una base de datos del BCRA donde las entidades informan las deudas de sus clientes y si se pagan a tiempo. Cada deuda se clasifica en 'situaciones': la situación 1 es normal, y a medida que aumentan los días de atraso se pasa a situaciones de mayor riesgo. Los bancos consultan esta información antes de darte un préstamo o una tarjeta, y un mal historial puede hacer que te los nieguen o que te ofrezcan peores condiciones. Podés consultar tu situación de forma gratuita en el sitio del BCRA con tu CUIT o CUIL. La mejor forma de cuidar tu historial es pagar en término y no tomar más deuda de la que podés afrontar.",
+  },
+  {
+    title: "Estafas virtuales: cómo cuidar tu dinero",
+    summary:
+      "Las trampas más comunes por teléfono, mensajes y redes, y cómo evitarlas.",
+    topic: "Seguridad",
+    content:
+      "Las estafas virtuales son cada vez más frecuentes. La regla de oro: ningún banco ni billetera virtual te va a pedir claves, códigos de verificación, el token ni los datos de tu tarjeta por teléfono, WhatsApp, mail o redes sociales. Desconfiá de mensajes urgentes que dicen que tu cuenta fue bloqueada o que ganaste un premio, y no entres a links que te envían; escribí vos la dirección del banco o usá la app oficial. Tampoco vayas a un cajero porque alguien te lo indica por teléfono. Activá la verificación en dos pasos en tus cuentas y usá contraseñas distintas. Si sospechás que fuiste víctima de una estafa, comunicate de inmediato con tu banco por sus canales oficiales para bloquear tus cuentas.",
+  },
 ];
 
 // datos de ejemplo para el usuario demo (gastos del mes actual)
@@ -88,11 +176,13 @@ export const seedInitialData = async () => {
       console.log("Categorías base cargadas.");
     }
 
-    // Artículos
-    const artCount = await Article.count();
-    if (artCount === 0) {
-      await Article.bulkCreate(ARTICLES);
-      console.log("Artículos de educación financiera cargados.");
+    // Artículos: inserts only the missing ones, so new articles also reach existing databases
+    const existingArticles = await Article.findAll({ attributes: ["title"] });
+    const existingTitles = new Set(existingArticles.map((a) => a.title));
+    const missingArticles = ARTICLES.filter((a) => !existingTitles.has(a.title));
+    if (missingArticles.length > 0) {
+      await Article.bulkCreate(missingArticles);
+      console.log(`${missingArticles.length} artículos de educación financiera cargados.`);
     }
 
     // Usuario demo + perfil + gastos de ejemplo
