@@ -61,12 +61,13 @@ export default function Dashboard() {
   const [reminders, setReminders] = useState([]);
   const [budgetStatus, setBudgetStatus] = useState([]);
   const [goals, setGoals] = useState([]);
+  const [categories, setCategories] = useState([]);
 
   // carga inicial (lo que no depende del mes elegido en el gráfico)
   useEffect(() => {
     const load = async () => {
       try {
-        const [t, cur, prv, d, u, r, b, g] = await Promise.all([
+        const [t, cur, prv, d, u, r, b, g, c] = await Promise.all([
           api.get("/expenses/trend"),
           api.get(`/expenses/summary?month=${current.month}&year=${current.year}`),
           api.get(`/expenses/summary?month=${prev.month}&year=${prev.year}`),
@@ -75,6 +76,7 @@ export default function Dashboard() {
           api.get("/reminders"),
           api.get("/budgets/status"),
           api.get("/goals"),
+          api.get("/categories"),
         ]);
         setTrend(t.data.totals.map((x) => ({ mes: MONTHS[x.month - 1], total: x.total })));
         setMonthSummary(cur.data);
@@ -84,6 +86,7 @@ export default function Dashboard() {
         setReminders(r.data);
         setBudgetStatus(b.data.status);
         setGoals(g.data);
+        setCategories(c.data);
       } catch (err) {
         console.error("Error loading dashboard:", err);
       } finally {
@@ -140,6 +143,16 @@ export default function Dashboard() {
     });
   };
   const isCurrent = period.month === current.month && period.year === current.year;
+
+  // same colors the user picked in "Gastos"
+  const colorById = Object.fromEntries(categories.map((cat) => [cat.id, cat.color]));
+  const categoryColor = (c, i) => colorById[c.category_id] || c.color || TEALS[i % TEALS.length];
+  const tooltipProps = {
+    contentStyle: { background: "#101d1f", border: "1px solid #24393b", borderRadius: 10 },
+    itemStyle: { color: "#eaf5f4" },
+    labelStyle: { color: "#8ca3b0" },
+    cursor: { fill: "rgba(14,223,220,.06)" },
+  };
   const showSideColumn = showBudgets || (showGoals && topGoal);
 
   return (
@@ -210,10 +223,9 @@ export default function Dashboard() {
                   <PieChart>
                     <Pie data={chartSummary.byCategory} dataKey="total" nameKey="category"
                       innerRadius={58} outerRadius={88} paddingAngle={2} stroke="none">
-                      {chartSummary.byCategory.map((_, i) => <Cell key={i} fill={TEALS[i % TEALS.length]} />)}
+                      {chartSummary.byCategory.map((c, i) => <Cell key={i} fill={categoryColor(c, i)} />)}
                     </Pie>
-                    <Tooltip formatter={(v) => money(v)}
-                      contentStyle={{ background: "#101d1f", border: "1px solid #24393b", borderRadius: 10, color: "#eaf5f4" }} />
+                    <Tooltip formatter={(v) => money(v)} {...tooltipProps} />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
@@ -222,7 +234,7 @@ export default function Dashboard() {
                   const pct = chartSummary.total ? Math.round((c.total / chartSummary.total) * 100) : 0;
                   return (
                     <div className="row" key={c.category} style={{ padding: "8px 0" }}>
-                      <span style={{ width: 10, height: 10, borderRadius: 3, background: TEALS[i % TEALS.length] }} />
+                      <span style={{ width: 10, height: 10, borderRadius: 3, background: categoryColor(c, i) }} />
                       <div className="grow r-title">{c.category}</div>
                       <div className="num muted" style={{ fontSize: 12.5 }}>{pct}%</div>
                       <div className="num" style={{ width: 90, textAlign: "right" }}>{money(c.total)}</div>
@@ -248,9 +260,7 @@ export default function Dashboard() {
                 <XAxis dataKey="mes" stroke="#5f7280" fontSize={11} tickLine={false} axisLine={false} />
                 <YAxis stroke="#5f7280" fontSize={11} tickLine={false} axisLine={false} width={54}
                   tickFormatter={(v) => (v >= 1000 ? `${v / 1000}k` : v)} />
-                <Tooltip formatter={(v) => money(v)}
-                  contentStyle={{ background: "#101d1f", border: "1px solid #24393b", borderRadius: 10, color: "#eaf5f4" }}
-                  labelStyle={{ color: "#8ca3b0" }} />
+                <Tooltip formatter={(v) => money(v)} {...tooltipProps} />
                 <Area type="monotone" dataKey="total" stroke="#0edfdc" strokeWidth={2} fill="url(#az)" />
               </AreaChart>
             </ResponsiveContainer>
