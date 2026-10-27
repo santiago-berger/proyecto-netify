@@ -1,12 +1,13 @@
 import { Op } from "sequelize";
 import { Debt, Reminder } from "../models/index.js";
-import { toLocalISODate, addDays } from "../helpers/date.helper.js";
+import { toLocalISODate, addDays, getCurrentPeriod } from "../helpers/date.helper.js";
+import { getMonthlyCategoryTotals, buildSavingTips } from "../helpers/expense.helper.js";
 
 const DEBT_SOON_DAYS = 3;
 const REMINDER_SOON_DAYS = 1;
-const LEVEL_ORDER = { danger: 0, warn: 1, info: 2 };
+const LEVEL_ORDER = { danger: 0, warn: 1, info: 2, tip: 3 };
 
-// GET /api/notifications -> built on the fly from debts and reminders (nothing is stored)
+// GET /api/notifications -> built on the fly from debts, reminders and this month's expenses (nothing is stored)
 export const getNotifications = async (req, res) => {
   try {
     const now = new Date();
@@ -14,7 +15,9 @@ export const getNotifications = async (req, res) => {
     const debtLimit = toLocalISODate(addDays(now, DEBT_SOON_DAYS));
     const reminderLimit = toLocalISODate(addDays(now, REMINDER_SOON_DAYS));
 
-    const [overdueDebts, soonDebts, soonReminders] = await Promise.all([
+    const { month, year } = getCurrentPeriod();
+
+    const [overdueDebts, soonDebts, soonReminders, byCategory] = await Promise.all([
       Debt.findAll({
         where: { user_id: req.user.id, is_paid: false, due_date: { [Op.lt]: today } },
         order: [["due_date", "ASC"]],
@@ -27,6 +30,7 @@ export const getNotifications = async (req, res) => {
         where: { user_id: req.user.id, date: { [Op.between]: [today, reminderLimit] } },
         order: [["date", "ASC"]],
       }),
+      getMonthlyCategoryTotals(req.user.id, month, year),
     ]);
 
     // the id includes the date so a rescheduled item shows up as a new notification
@@ -57,6 +61,15 @@ export const getNotifications = async (req, res) => {
         amount: r.amount === null ? null : Number(r.amount),
         date: r.date,
         link: "/calendario",
+      })),
+      ...buildSavingTips(byCategory).map((t) => ({
+        id: `tip-${t.key}-${year}-${month}`,
+        kind: "tip",
+        level: "tip",
+        title: t.text,
+        amount: null,
+        date: today,
+        link: "/gastos",
       })),
     ].sort((a, b) => LEVEL_ORDER[a.level] - LEVEL_ORDER[b.level] || String(a.date).localeCompare(String(b.date)));
 
