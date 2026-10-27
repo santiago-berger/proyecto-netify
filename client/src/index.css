@@ -291,6 +291,16 @@ a { color: inherit; text-decoration: none; }
 .calendar-dot.ok { background: var(--ok); } .calendar-dot.warn { background: var(--warn); }
 .calendar-dot.danger { background: var(--danger); } .calendar-dot.teal { background: var(--teal); }
 
+/* ---------- gastos por categoría ---------- */
+.expense-blocks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; align-items: start; }
+.expense-block { background: var(--panel); border: 1px solid var(--line); border-top: 3px solid var(--teal-600); border-radius: var(--radius); padding: 16px 18px; transition: opacity .15s, border-color .15s, transform .15s; }
+.expense-block.dragging { opacity: .45; }
+.expense-block.drag-over { border-color: var(--teal-600); transform: translateY(-2px); }
+.expense-block-head { display: flex; align-items: center; gap: 10px; }
+.expense-block .drag-handle { color: var(--muted-2); cursor: grab; flex-shrink: 0; }
+.expense-block .drag-handle:active { cursor: grabbing; }
+.cat-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+
 /* ---------- notificaciones ---------- */
 .topbar-right { display: flex; align-items: center; gap: 14px; }
 .notif { position: relative; }
@@ -319,7 +329,7 @@ a { color: inherit; text-decoration: none; }
   .sidebar-overlay { display: block; }
   .auth-wrap { grid-template-columns: 1fr; }
   .auth-aside { display: none; }
-  .grid-2, .grid-4 { grid-template-columns: 1fr; }
+  .grid-2, .grid-4, .expense-blocks { grid-template-columns: 1fr; }
 }
 @media (max-width: 560px) {
   .calendar-cell { min-height: 54px; padding: 4px; align-items: center; }
