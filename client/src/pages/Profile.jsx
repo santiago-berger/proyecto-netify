@@ -166,9 +166,6 @@ export default function Profile() {
           })}
         </div>
         {prefsOk && <div className="chip ok mt">Preferencias actualizadas</div>}
-        <div className="muted mt" style={{ fontSize: 12.5 }}>
-          “Resumen” y “Gastos” están siempre disponibles porque son la base de la app.
-        </div>
       </Card>
     </div>
   );
