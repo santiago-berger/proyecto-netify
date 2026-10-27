@@ -1,4 +1,4 @@
-import { body, param } from "express-validator";
+import { body, param, query } from "express-validator";
 import { Category } from "../../models/index.js";
 
 const amount = body("amount")
@@ -38,6 +38,12 @@ export const updateExpenseValidation = [
       if (!category) throw new Error("La categoría no existe");
       return true;
     }),
+];
+
+export const categoryExpensesValidation = [
+  param("id").isInt().withMessage("El id de la categoría debe ser un entero"),
+  query("page").optional().isInt({ min: 1 }).withMessage("La página debe ser un número mayor a 0"),
+  query("order").optional().isIn(["desc", "asc"]).withMessage("El orden debe ser desc o asc"),
 ];
 
 export const idParamValidation = [

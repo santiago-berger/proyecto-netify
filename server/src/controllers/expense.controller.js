@@ -28,6 +28,46 @@ export const getExpenses = async (req, res) => {
   }
 };
 
+const EXPENSES_PER_PAGE = 15;
+
+// GET /api/expenses/category/:id?page=&order=desc|asc -> paginated expenses of one category
+export const getExpensesByCategory = async (req, res) => {
+  try {
+    const { id } = matchedData(req, { locations: ["params"] });
+    const { page = 1, order = "desc" } = matchedData(req, { locations: ["query"] });
+    const currentPage = Number(page);
+
+    const category = await Category.findOne({
+      where: { id, [Op.or]: [{ user_id: null }, { user_id: req.user.id }] },
+    });
+    if (!category) return res.status(404).json({ message: "Categoría no encontrada" });
+
+    const where = { user_id: req.user.id, category_id: category.id };
+    const [{ count, rows }, totalRow] = await Promise.all([
+      Expense.findAndCountAll({
+        where,
+        order: [["date", order.toUpperCase()], ["id", order.toUpperCase()]],
+        limit: EXPENSES_PER_PAGE,
+        offset: (currentPage - 1) * EXPENSES_PER_PAGE,
+      }),
+      Expense.findOne({ where, attributes: [[fn("SUM", col("amount")), "total"]], raw: true }),
+    ]);
+
+    return res.status(200).json({
+      category,
+      expenses: rows,
+      count,
+      totalAmount: Number(totalRow?.total) || 0,
+      page: currentPage,
+      pages: Math.max(Math.ceil(count / EXPENSES_PER_PAGE), 1),
+      perPage: EXPENSES_PER_PAGE,
+    });
+  } catch (error) {
+    console.error("Error getting expenses by category:", error);
+    return res.status(500).json({ message: "No se pudieron obtener los gastos de la categoría" });
+  }
+};
+
 // GET /api/expenses/:id
 export const getExpenseById = async (req, res) => {
   try {
