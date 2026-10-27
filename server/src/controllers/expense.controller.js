@@ -30,11 +30,11 @@ export const getExpenses = async (req, res) => {
 
 const EXPENSES_PER_PAGE = 15;
 
-// GET /api/expenses/category/:id?page=&order=desc|asc -> paginated expenses of one category
+// GET /api/expenses/category/:id?page=&order=desc|asc&month=&year= -> paginated expenses of one category
 export const getExpensesByCategory = async (req, res) => {
   try {
     const { id } = matchedData(req, { locations: ["params"] });
-    const { page = 1, order = "desc" } = matchedData(req, { locations: ["query"] });
+    const { page = 1, order = "desc", month, year } = matchedData(req, { locations: ["query"] });
     const currentPage = Number(page);
 
     const category = await Category.findOne({
@@ -43,6 +43,10 @@ export const getExpensesByCategory = async (req, res) => {
     if (!category) return res.status(404).json({ message: "Categoría no encontrada" });
 
     const where = { user_id: req.user.id, category_id: category.id };
+    if (month && year) {
+      const { start, end } = getMonthRange(Number(month), Number(year));
+      where.date = { [Op.between]: [start, end] };
+    }
     const [{ count, rows }, totalRow] = await Promise.all([
       Expense.findAndCountAll({
         where,

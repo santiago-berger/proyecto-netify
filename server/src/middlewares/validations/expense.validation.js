@@ -44,6 +44,8 @@ export const categoryExpensesValidation = [
   param("id").isInt().withMessage("El id de la categoría debe ser un entero"),
   query("page").optional().isInt({ min: 1 }).withMessage("La página debe ser un número mayor a 0"),
   query("order").optional().isIn(["desc", "asc"]).withMessage("El orden debe ser desc o asc"),
+  query("month").optional().isInt({ min: 1, max: 12 }).withMessage("El mes debe estar entre 1 y 12"),
+  query("year").optional().isInt({ min: 2000, max: 2100 }).withMessage("El año no es válido"),
 ];
 
 export const idParamValidation = [
