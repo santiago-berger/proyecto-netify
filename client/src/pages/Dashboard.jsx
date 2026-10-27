@@ -5,7 +5,7 @@ import {
   AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid,
 } from "recharts";
 import {
-  CreditCard, CalendarClock, CalendarDays, Receipt, ChevronLeft, ChevronRight, AlertCircle,
+  CreditCard, Receipt, ChevronLeft, ChevronRight, AlertCircle,
   Wallet, PiggyBank, Gauge,
 } from "lucide-react";
 import { api } from "../api/api.js";
@@ -15,36 +15,21 @@ import { Card } from "../components/ui/Card.jsx";
 import { Spinner } from "../components/ui/Spinner.jsx";
 import { Empty } from "../components/ui/Empty.jsx";
 import { Progress } from "../components/ui/Progress.jsx";
-import { money, shortDate, MONTHS, todayISO, daysBetween } from "../utils/format.js";
+import { money, MONTHS } from "../utils/format.js";
 
 const TEALS = ["#0edfdc", "#7c5cff", "#ffb020", "#ff5c8a", "#3ddc84", "#4d9dff", "#c86bfa", "#8fa3ad"];
-const groupLabelStyle = {
-  fontSize: 10.5, textTransform: "uppercase", letterSpacing: ".08em",
-  color: "var(--muted-2)", fontWeight: 600, marginBottom: 2,
-};
 const MONTHS_LONG = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
-const AGENDA_DAYS = 7;
 const TOP_BUDGETS = 4;
-const REMINDER_LABELS = { income: "Ingreso", payment: "Pago", loan: "Préstamo", other: "Recordatorio" };
-const REMINDER_CHIPS = { income: "ok", payment: "warn", loan: "teal", other: "" };
 const emptySummary = { total: 0, byCategory: [] };
 
 const previousPeriod = ({ month, year }) =>
   month === 1 ? { month: 12, year: year - 1 } : { month: month - 1, year };
-
-const dueLabel = (today, date) => {
-  const days = daysBetween(today, date);
-  if (days === 0) return "Hoy";
-  if (days === 1) return "Mañana";
-  return shortDate(date);
-};
 
 export default function Dashboard() {
   const { user, modules } = useAuth();
   const now = new Date();
   const current = { month: now.getMonth() + 1, year: now.getFullYear() };
   const prev = previousPeriod(current);
-  const today = todayISO();
 
   const showDebts = modules?.deudas !== false;
   const showBudgets = modules?.presupuestos !== false;
@@ -58,7 +43,6 @@ export default function Dashboard() {
   const [trend, setTrend] = useState([]);
   const [debts, setDebts] = useState({ totalPending: 0 });
   const [upcoming, setUpcoming] = useState({ upcoming: [], overdue: [] });
-  const [reminders, setReminders] = useState([]);
   const [budgetStatus, setBudgetStatus] = useState([]);
   const [goals, setGoals] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -67,13 +51,12 @@ export default function Dashboard() {
   useEffect(() => {
     const load = async () => {
       try {
-        const [t, cur, prv, d, u, r, b, g, c] = await Promise.all([
+        const [t, cur, prv, d, u, b, g, c] = await Promise.all([
           api.get("/expenses/trend"),
           api.get(`/expenses/summary?month=${current.month}&year=${current.year}`),
           api.get(`/expenses/summary?month=${prev.month}&year=${prev.year}`),
           api.get("/debts"),
           api.get("/debts/upcoming"),
-          api.get("/reminders"),
           api.get("/budgets/status"),
           api.get("/goals"),
           api.get("/categories"),
@@ -83,7 +66,6 @@ export default function Dashboard() {
         setPrevSummary(prv.data);
         setDebts(d.data);
         setUpcoming(u.data);
-        setReminders(r.data);
         setBudgetStatus(b.data.status);
         setGoals(g.data);
         setCategories(c.data);
@@ -113,21 +95,7 @@ export default function Dashboard() {
   const available = income - spent;
   const usedPct = income > 0 ? Math.round((spent / income) * 100) : 0;
 
-  // ---- agenda: deudas vencidas + próximos días (deudas y recordatorios) ----
   const overdue = showDebts ? upcoming.overdue : [];
-  const nextItems = [
-    ...(showDebts ? upcoming.upcoming.map((d) => ({
-      key: `d-${d.id}`, title: d.creditor_name, date: d.due_date, amount: d.amount, label: "Deuda", chip: "danger", icon: CreditCard,
-    })) : []),
-    ...reminders
-      .filter((r) => {
-        const days = daysBetween(today, r.date);
-        return days >= 0 && days <= AGENDA_DAYS;
-      })
-      .map((r) => ({
-        key: `r-${r.id}`, title: r.title, date: r.date, amount: r.amount, label: REMINDER_LABELS[r.type] || "Recordatorio", chip: REMINDER_CHIPS[r.type] || "", icon: CalendarDays,
-      })),
-  ].sort((a, b) => String(a.date).localeCompare(String(b.date)));
 
   // ---- presupuestos más cerca del tope ----
   const topBudgets = [...budgetStatus].sort((a, b) => b.percent - a.percent).slice(0, TOP_BUDGETS);
@@ -268,59 +236,9 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      {/* ---------- lo que hay que atender ---------- */}
-      <div className={showSideColumn ? "grid-2" : ""}>
-        <Card
-          title="Agenda"
-          sub={`Vencidas y lo que viene en los próximos ${AGENDA_DAYS} días`}
-          action={<Link to="/calendario" className="btn btn-ghost btn-sm"><CalendarDays size={14} /> Calendario</Link>}
-        >
-          {overdue.length === 0 && nextItems.length === 0 ? (
-            <Empty icon={CalendarClock} title="Nada pendiente esta semana" hint="Podés agendar pagos e ingresos desde el Calendario." />
-          ) : (
-            <>
-              {overdue.length > 0 && (
-                <>
-                  <div style={groupLabelStyle}>Vencidas</div>
-                  <div className="list">
-                    {overdue.map((d) => (
-                      <div className="row" key={`o-${d.id}`}>
-                        <div className="icon-badge" style={{ color: "var(--danger)", background: "rgba(224,100,107,.1)" }}><AlertCircle size={16} /></div>
-                        <div className="grow">
-                          <div className="r-title">{d.creditor_name}</div>
-                          <div className="r-sub">Venció el {shortDate(d.due_date)}</div>
-                        </div>
-                        <span className="chip danger">Vencida</span>
-                        <div className="num" style={{ width: 90, textAlign: "right" }}>{money(d.amount)}</div>
-                      </div>
-                    ))}
-                  </div>
-                </>
-              )}
-              <div style={{ ...groupLabelStyle, marginTop: overdue.length > 0 ? 14 : 0 }}>Próximos {AGENDA_DAYS} días</div>
-              {nextItems.length === 0 ? (
-                <div className="muted" style={{ fontSize: 12.5, padding: "8px 0" }}>No tenés nada agendado para esta semana.</div>
-              ) : (
-                <div className="list">
-                  {nextItems.map((item) => (
-                    <div className="row" key={item.key}>
-                      <div className="icon-badge"><item.icon size={16} /></div>
-                      <div className="grow">
-                        <div className="r-title">{item.title}</div>
-                        <div className="r-sub">{dueLabel(today, item.date)}</div>
-                      </div>
-                      <span className={`chip ${item.chip}`}>{item.label}</span>
-                      <div className="num" style={{ width: 90, textAlign: "right" }}>{item.amount != null ? money(item.amount) : ""}</div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </>
-          )}
-        </Card>
-
+      {/* ---------- presupuestos y meta ---------- */}
         {showSideColumn && (
-          <div className="page-grid" style={{ gap: 18, alignContent: "start" }}>
+          <div className={showBudgets && showGoals && topGoal ? "grid-2" : ""} style={{ alignItems: "start" }}>
             {showBudgets && (
               <Card
                 title="Presupuestos del mes"
@@ -359,7 +277,6 @@ export default function Dashboard() {
             )}
           </div>
         )}
-      </div>
     </div>
   );
 }
