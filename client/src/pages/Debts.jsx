@@ -102,8 +102,8 @@ export default function Debts() {
 
   return (
     <div className="page-grid">
-      <div className="grid-4">
-        <div className="hero" style={{ gridColumn: "span 2" }}>
+      <div className="stats-row">
+        <div className="hero">
           <div className="label">Total adeudado</div>
           <div className="value num"><Amount value={totalPending} /></div>
           <div className="foot">{debts.filter((d) => !d.is_paid).length} deudas pendientes</div>
