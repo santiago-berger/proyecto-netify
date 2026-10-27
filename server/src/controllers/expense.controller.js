@@ -1,6 +1,8 @@
 import { matchedData } from "express-validator";
 import { Op, fn, col, literal } from "sequelize";
 import { Expense, Category } from "../models/index.js";
+import { getCurrentPeriod, getMonthRange } from "../helpers/date.helper.js";
+import { getMonthlyCategoryTotals } from "../helpers/expense.helper.js";
 
 // GET /api/expenses  (GF-4)  -> lista los gastos del usuario, con su categoría
 export const getExpenses = async (req, res) => {
@@ -9,10 +11,7 @@ export const getExpenses = async (req, res) => {
     const where = { user_id: req.user.id };
 
     if (month && year) {
-      const start = `${year}-${String(month).padStart(2, "0")}-01`;
-      const end = new Date(Number(year), Number(month), 0)
-        .toISOString()
-        .slice(0, 10);
+      const { start, end } = getMonthRange(Number(month), Number(year));
       where.date = { [Op.between]: [start, end] };
     }
 
@@ -107,34 +106,11 @@ export const deleteExpense = async (req, res) => {
 // GET /api/expenses/summary  (GF-6)  -> total del mes y total por categoría
 export const getSummary = async (req, res) => {
   try {
-    const now = new Date();
-    const month = Number(req.query.month) || now.getMonth() + 1;
-    const year = Number(req.query.year) || now.getFullYear();
+    const current = getCurrentPeriod();
+    const month = Number(req.query.month) || current.month;
+    const year = Number(req.query.year) || current.year;
 
-    const start = `${year}-${String(month).padStart(2, "0")}-01`;
-    const end = new Date(year, month, 0).toISOString().slice(0, 10);
-
-    const rows = await Expense.findAll({
-      where: {
-        user_id: req.user.id,
-        date: { [Op.between]: [start, end] },
-      },
-      attributes: [
-        "category_id",
-        [fn("SUM", col("amount")), "total"],
-      ],
-      include: [{ model: Category, as: "category", attributes: ["name", "color", "icon"] }],
-      group: ["category_id", "category.id"],
-      raw: true,
-      nest: true,
-    });
-
-    const byCategory = rows.map((r) => ({
-      category: r.category?.name || "Sin categoría",
-      color: r.category?.color || "#8CB9CC",
-      icon: r.category?.icon || "circle",
-      total: Number(r.total) || 0,
-    }));
+    const byCategory = await getMonthlyCategoryTotals(req.user.id, month, year);
 
     const total = byCategory.reduce((acc, c) => acc + c.total, 0);
 
