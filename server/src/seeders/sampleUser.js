@@ -24,11 +24,11 @@ import { toLocalISODate, addDays } from "../helpers/date.helper.js";
 import { seedInitialData } from "./seed.js";
 
 const SAMPLE_USER = {
-  username: "lucia",
-  email: "lucia.fernandez@correo.com",
-  password: "lucia1234",
-  first_name: "Lucía",
-  last_name: "Fernández",
+  username: "martin",
+  email: "martin.gonzalez@correo.com",
+  password: "martin1234",
+  first_name: "Martín",
+  last_name: "González",
   monthly_income: 1200000,
 };
 
