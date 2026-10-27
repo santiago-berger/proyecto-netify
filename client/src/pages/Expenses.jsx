@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Plus, Pencil, Trash2, Receipt, Check, X, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, GripVertical,
 } from "lucide-react";
@@ -24,11 +24,13 @@ const currentPeriod = () => {
 };
 
 // groups the month's expenses by category: [{ id, name, color, total, expenses }]
-const groupByCategory = (expenses) => {
+// colorById holds the user's colors (base categories can have a personal color)
+const groupByCategory = (expenses, colorById) => {
   const groups = {};
   expenses.forEach((e) => {
     const id = e.category_id;
-    groups[id] ||= { id, name: e.category?.name || "Sin categoría", color: e.category?.color || "#8fa3ad", total: 0, expenses: [] };
+    const color = colorById[id] || e.category?.color || "#8fa3ad";
+    groups[id] ||= { id, name: e.category?.name || "Sin categoría", color, total: 0, expenses: [] };
     groups[id].total += Number(e.amount);
     groups[id].expenses.push(e);
   });
@@ -54,6 +56,8 @@ export default function Expenses() {
   const [expanded, setExpanded] = useState({});
   const [dragId, setDragId] = useState(null);
   const [overId, setOverId] = useState(null);
+  const [colorPickerFor, setColorPickerFor] = useState(null);
+  const colorTimer = useRef(null);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(emptyForm);
@@ -157,7 +161,8 @@ export default function Expenses() {
 
   if (loading) return <Spinner />;
 
-  const groups = sortGroups(groupByCategory(expenses), order);
+  const colorById = Object.fromEntries(categories.map((c) => [c.id, c.color]));
+  const groups = sortGroups(groupByCategory(expenses, colorById), order);
   const total = groups.reduce((acc, g) => acc + g.total, 0);
   const periodLabel = `${MONTH_NAMES[view.month - 1]} ${view.year}`;
 
@@ -184,6 +189,22 @@ export default function Expenses() {
   };
 
   const endDrag = () => { setDragId(null); setOverId(null); };
+
+  const changeColor = async (categoryId, color) => {
+    try {
+      await api.put(`/categories/${categoryId}/color`, { color });
+      setCategories((list) => list.map((c) => (c.id === categoryId ? { ...c, color } : c)));
+      setColorPickerFor(null);
+    } catch (err) {
+      console.error("Error changing category color:", err);
+    }
+  };
+
+  // the native color input fires on every mouse move: wait until the user stops
+  const changeColorDebounced = (categoryId, color) => {
+    clearTimeout(colorTimer.current);
+    colorTimer.current = setTimeout(() => changeColor(categoryId, color), 400);
+  };
 
   return (
     <div className="page-grid">
@@ -233,13 +254,26 @@ export default function Expenses() {
               >
                 <div className="expense-block-head">
                   <GripVertical size={16} className="drag-handle" />
-                  <span className="cat-dot" style={{ background: g.color }} />
+                  <button type="button" className="cat-dot cat-dot-btn" style={{ background: g.color }}
+                    onClick={() => setColorPickerFor(colorPickerFor === g.id ? null : g.id)} title="Cambiar color" />
                   <div className="grow" style={{ minWidth: 0, flex: 1 }}>
                     <div className="r-title" style={{ fontWeight: 600 }}>{g.name}</div>
                     <div className="r-sub">{g.expenses.length} {g.expenses.length === 1 ? "gasto" : "gastos"} · {share}% del mes</div>
                   </div>
                   <div className="num" style={{ fontWeight: 600, fontSize: 16 }}>{money(g.total)}</div>
                 </div>
+
+                {colorPickerFor === g.id && (
+                  <div className="color-picker">
+                    {PALETTE.map((col) => (
+                      <button key={col} type="button" className={`swatch ${g.color.toLowerCase() === col ? "active" : ""}`}
+                        style={{ background: col }} onClick={() => changeColor(g.id, col)} title={col} />
+                    ))}
+                    <label className="swatch swatch-custom" title="Elegir otro color">
+                      <input type="color" defaultValue={g.color} onChange={(e) => changeColorDebounced(g.id, e.target.value)} />
+                    </label>
+                  </div>
+                )}
 
                 <div className="progress" style={{ height: 5, margin: "10px 0 4px" }}>
                   <span style={{ width: `${share}%`, background: g.color }} />
