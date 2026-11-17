@@ -1,4 +1,4 @@
-import { body, param } from "express-validator";
+import { body, param, query } from "express-validator";
 import { Category, Budget } from "../../models/index.js";
 import { getCurrentPeriod } from "../../helpers/date.helper.js";
 
@@ -35,6 +35,12 @@ export const updateBudgetValidation = [
   body("amount_limit")
     .notEmpty().withMessage("El tope es obligatorio")
     .isFloat({ gt: 0 }).withMessage("El tope debe ser mayor a 0"),
+];
+
+// historial: mes y año opcionales (por defecto, el período actual)
+export const budgetHistoryValidation = [
+  query("month").optional().isInt({ min: 1, max: 12 }).withMessage("El mes debe estar entre 1 y 12").toInt(),
+  query("year").optional().isInt({ min: 2000, max: 2100 }).withMessage("El año no es válido").toInt(),
 ];
 
 export const idParamValidation = [

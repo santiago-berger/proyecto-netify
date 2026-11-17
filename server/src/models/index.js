@@ -11,6 +11,7 @@ import { Article } from "./article.model.js";
 import { Favorite } from "./favorite.model.js";
 import { Reminder } from "./reminder.model.js";
 import { CategoryColor } from "./categoryColor.model.js";
+import { BudgetHistory } from "./budgetHistory.model.js";
 
 /* =========================================================
    RELACIONES
@@ -39,6 +40,14 @@ Budget.belongsTo(User, { foreignKey: "user_id", as: "user" });
 // 1:N  Category - Budget
 Category.hasMany(Budget, { foreignKey: "category_id", as: "budgets" });
 Budget.belongsTo(Category, { foreignKey: "category_id", as: "category" });
+
+// 1:N  User - BudgetHistory (cambios en los topes de presupuesto)
+User.hasMany(BudgetHistory, { foreignKey: "user_id", as: "budgetHistory", onDelete: "CASCADE" });
+BudgetHistory.belongsTo(User, { foreignKey: "user_id", as: "user" });
+
+// 1:N  Category - BudgetHistory (si se borra la categoría, el registro queda con su nombre guardado)
+Category.hasMany(BudgetHistory, { foreignKey: "category_id", as: "budgetHistory", onDelete: "SET NULL" });
+BudgetHistory.belongsTo(Category, { foreignKey: "category_id", as: "category" });
 
 // 1:N  User - Debt
 User.hasMany(Debt, { foreignKey: "user_id", as: "debts", onDelete: "CASCADE" });
@@ -79,4 +88,5 @@ export {
   Favorite,
   Reminder,
   CategoryColor,
+  BudgetHistory,
 };

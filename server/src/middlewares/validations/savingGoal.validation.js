@@ -1,4 +1,4 @@
-import { body, param } from "express-validator";
+import { body, param, query } from "express-validator";
 
 export const createGoalValidation = [
   body("name")
@@ -33,6 +33,11 @@ export const contributionValidation = [
   body("date")
     .notEmpty().withMessage("La fecha es obligatoria")
     .isISO8601().withMessage("La fecha debe tener el formato YYYY-MM-DD"),
+];
+
+// historial: opcionalmente filtrado por una meta
+export const goalsHistoryValidation = [
+  query("goal_id").optional().isInt({ min: 1 }).withMessage("El id de la meta debe ser un entero").toInt(),
 ];
 
 export const idParamValidation = [

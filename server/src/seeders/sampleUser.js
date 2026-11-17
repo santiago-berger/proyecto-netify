@@ -18,6 +18,7 @@ import {
   Favorite,
   Reminder,
   CategoryColor,
+  BudgetHistory,
 } from "../models/index.js";
 import { hashPassword } from "../helpers/bcrypt.helper.js";
 import { toLocalISODate, addDays } from "../helpers/date.helper.js";
@@ -151,6 +152,52 @@ const buildBudgets = (userId, categoryIds, expenses, today) => {
   return budgets;
 };
 
+/*
+  Historial de los topes: el alta de cada presupuesto y, en el mes actual, un par de ajustes
+  (Ocio aumentado, Alimentos reducido) y un presupuesto creado y eliminado (Gimnasio),
+  para que se vean los tres tipos de cambio.
+*/
+const buildBudgetHistory = (userId, budgets, categoryIds, today) => {
+  const namesById = Object.fromEntries(Object.entries(categoryIds).map(([name, id]) => [id, name]));
+  const month = today.getMonth() + 1;
+  const year = today.getFullYear();
+  const startOfMonth = (m, y, hour = 9) => new Date(y, m - 1, 1, hour, 0);
+  // un momento del mes actual posterior al alta, sin pasarse de hoy
+  const daysAgo = (days, after) => new Date(Math.max(after.getTime() + 3600e3, today.getTime() - days * 864e5));
+  const ADJUSTMENTS = { Ocio: { initialFactor: 0.85, daysAgo: 4 }, Alimentos: { initialFactor: 1.15, daysAgo: 1 } };
+
+  const history = [];
+  for (const b of budgets) {
+    const name = namesById[b.category_id];
+    const base = { user_id: userId, category_id: b.category_id, category_name: name, month: b.month, year: b.year };
+    const created = startOfMonth(b.month, b.year);
+    const adjustment = b.month === month && b.year === year ? ADJUSTMENTS[name] : null;
+
+    if (!adjustment) {
+      history.push({ ...base, action: "creado", new_limit: b.amount_limit, changed_at: created });
+      continue;
+    }
+    const initial = roundTo(b.amount_limit * adjustment.initialFactor, 1000);
+    history.push({ ...base, action: "creado", new_limit: initial, changed_at: created });
+    history.push({
+      ...base,
+      action: "modificado",
+      previous_limit: initial,
+      new_limit: b.amount_limit,
+      changed_at: daysAgo(adjustment.daysAgo, created),
+    });
+  }
+
+  if (categoryIds["Gimnasio"]) {
+    const base = { user_id: userId, category_id: categoryIds["Gimnasio"], category_name: "Gimnasio", month, year };
+    const created = startOfMonth(month, year, 10);
+    history.push({ ...base, action: "creado", new_limit: 25000, changed_at: created });
+    history.push({ ...base, action: "eliminado", previous_limit: 25000, changed_at: daysAgo(6, created) });
+  }
+
+  return history;
+};
+
 const buildDebts = (userId, today) => {
   const day = (offset) => toLocalISODate(addDays(today, offset));
   const debts = [
@@ -236,6 +283,7 @@ const removeSampleUser = async () => {
   await SavingContribution.destroy({ where: { goal_id: { [Op.in]: goals.map((g) => g.id) } } });
   await SavingGoal.destroy({ where: { user_id: userId } });
   await Expense.destroy({ where: { user_id: userId }, force: true });
+  await BudgetHistory.destroy({ where: { user_id: userId } });
   await Budget.destroy({ where: { user_id: userId } });
   await Debt.destroy({ where: { user_id: userId } });
   await Reminder.destroy({ where: { user_id: userId } });
@@ -284,7 +332,9 @@ export const seedSampleUser = async () => {
 
   const expenses = buildExpenses(user.id, categoryIds, today);
   await Expense.bulkCreate(expenses);
-  await Budget.bulkCreate(buildBudgets(user.id, categoryIds, expenses, today));
+  const budgets = buildBudgets(user.id, categoryIds, expenses, today);
+  await Budget.bulkCreate(budgets);
+  await BudgetHistory.bulkCreate(buildBudgetHistory(user.id, budgets, categoryIds, today));
   await Debt.bulkCreate(buildDebts(user.id, today));
   await Reminder.bulkCreate(buildReminders(user.id, today));
 

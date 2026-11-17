@@ -5,10 +5,12 @@ import {
   updateBudget,
   deleteBudget,
   getBudgetStatus,
+  getBudgetHistory,
 } from "../controllers/budget.controller.js";
 import {
   createBudgetValidation,
   updateBudgetValidation,
+  budgetHistoryValidation,
   idParamValidation,
 } from "../middlewares/validations/budget.validation.js";
 import { validate } from "../middlewares/validator.js";
@@ -19,6 +21,7 @@ export const budgetRouter = Router();
 budgetRouter.use(authMiddleware);
 
 budgetRouter.get("/budgets/status", getBudgetStatus);
+budgetRouter.get("/budgets/history", budgetHistoryValidation, validate, getBudgetHistory);
 budgetRouter.get("/budgets", getBudgets);
 budgetRouter.post("/budgets", createBudgetValidation, validate, createBudget);
 budgetRouter.put("/budgets/:id", updateBudgetValidation, validate, updateBudget);

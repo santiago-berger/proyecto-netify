@@ -37,6 +37,46 @@ export const getGoals = async (req, res) => {
   }
 };
 
+/*
+  GET /api/goals/history?goal_id=  -> aportes y retiros de las metas (o de una sola)
+  Los movimientos ya se guardan en saving_contributions (retiros con monto negativo);
+  acá se exponen con su tipo y con el saldo que quedó en la meta después de cada uno.
+*/
+export const getGoalsHistory = async (req, res) => {
+  try {
+    const { goal_id } = matchedData(req, { locations: ["query"] });
+
+    const contributions = await SavingContribution.findAll({
+      where: goal_id ? { goal_id } : undefined,
+      include: [{ model: SavingGoal, as: "goal", where: { user_id: req.user.id }, attributes: ["id", "name"] }],
+      // orden cronológico para calcular el saldo acumulado de cada meta
+      order: [["date", "ASC"], ["id", "ASC"]],
+    });
+
+    const balances = {};
+    const movements = contributions.map((c) => {
+      const amount = Number(c.amount);
+      balances[c.goal_id] = (balances[c.goal_id] || 0) + amount;
+      return {
+        id: c.id,
+        goal: { id: c.goal.id, name: c.goal.name },
+        type: amount < 0 ? "withdrawal" : "deposit",
+        amount: Math.abs(amount),
+        date: c.date, // fecha del movimiento (la elige el usuario)
+        registered_at: c.created_at, // cuándo se cargó en la plataforma
+        balance_after: balances[c.goal_id],
+      };
+    });
+
+    // se devuelve del más reciente al más antiguo
+    return res.status(200).json(movements.reverse());
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: "Error al obtener el historial de las metas", error: error.message });
+  }
+};
+
 // POST /api/goals  (GF-11)
 export const createGoal = async (req, res) => {
   try {
