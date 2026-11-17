@@ -23,6 +23,10 @@ export const shortDate = (d) =>
 export const longDate = (d) =>
   parseLocal(d).toLocaleDateString("es-AR", { day: "2-digit", month: "long", year: "numeric" });
 
+// fecha y hora de un timestamp: "16 nov, 14:32"
+export const dateTime = (d) =>
+  new Date(d).toLocaleString("es-AR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+
 export const MONTHS = [
   "Ene", "Feb", "Mar", "Abr", "May", "Jun",
   "Jul", "Ago", "Sep", "Oct", "Nov", "Dic",

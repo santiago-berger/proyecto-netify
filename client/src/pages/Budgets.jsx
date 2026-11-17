@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Plus, Trash2, Wallet, Pencil } from "lucide-react";
+import { Plus, Trash2, Wallet, Pencil, PlusCircle, TrendingUp, TrendingDown, XCircle } from "lucide-react";
 import { api } from "../api/api.js";
 import { Card } from "../components/ui/Card.jsx";
 import { Amount } from "../components/ui/Amount.jsx";
@@ -8,6 +8,46 @@ import { Empty } from "../components/ui/Empty.jsx";
 import { Modal } from "../components/ui/Modal.jsx";
 import { Field } from "../components/ui/Field.jsx";
 import { Progress } from "../components/ui/Progress.jsx";
+import { HistoryList } from "../components/ui/HistoryList.jsx";
+import { dateTime, money } from "../utils/format.js";
+
+// un registro del historial de topes -> fila de la lista
+const toHistoryItem = (h) => {
+  const name = h.category.name;
+  if (h.action === "creado") {
+    return {
+      key: h.id, icon: PlusCircle, tone: "teal",
+      title: `${name}: presupuesto creado`,
+      sub: dateTime(h.changed_at),
+      right: <><div className="muted history-caption">Tope inicial</div><Amount value={h.new_limit} className="num" /></>,
+    };
+  }
+  if (h.action === "eliminado") {
+    return {
+      key: h.id, icon: XCircle, tone: "danger",
+      title: `${name}: presupuesto eliminado`,
+      sub: dateTime(h.changed_at),
+      right: <><div className="muted history-caption">Tope que tenía</div><Amount value={h.previous_limit} className="num" /></>,
+    };
+  }
+  const raised = h.difference > 0;
+  return {
+    // subir el tope habilita más gasto (ámbar); bajarlo es ajustar el control (verde)
+    key: h.id, icon: raised ? TrendingUp : TrendingDown, tone: raised ? "warn" : "ok",
+    title: `${name}: tope ${raised ? "aumentado" : "reducido"}`,
+    sub: dateTime(h.changed_at),
+    right: (
+      <>
+        <div className="num">
+          <Amount value={h.previous_limit} className="muted" /> → <Amount value={h.new_limit} />
+        </div>
+        <div className={`history-caption ${raised ? "text-warn" : "text-ok"}`}>
+          {raised ? "+" : "−"}{money(Math.abs(h.difference))}
+        </div>
+      </>
+    ),
+  };
+};
 
 const MONTH_NAMES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 
@@ -15,6 +55,7 @@ export default function Budgets() {
   const [loading, setLoading] = useState(true);
   const [budgets, setBudgets] = useState([]);
   const [status, setStatus] = useState([]);
+  const [history, setHistory] = useState([]);
   const [categories, setCategories] = useState([]);
   const [period, setPeriod] = useState(null);
   const [open, setOpen] = useState(false);
@@ -24,14 +65,16 @@ export default function Budgets() {
   const [saving, setSaving] = useState(false);
 
   const load = async () => {
-    const [b, s, c] = await Promise.all([
+    const [b, s, c, h] = await Promise.all([
       api.get("/budgets"),
       api.get("/budgets/status"),
       api.get("/categories"),
+      api.get("/budgets/history"),
     ]);
     setBudgets(b.data.budgets);
     setPeriod({ month: b.data.month, year: b.data.year });
     setStatus(s.data.status);
+    setHistory(h.data.history);
     setCategories(c.data);
     setLoading(false);
   };
@@ -136,6 +179,14 @@ export default function Budgets() {
             })}
           </div>
         )}
+      </Card>
+
+      <Card title="Historial de cambios" sub={`Altas, ajustes y bajas de los topes de ${periodLabel}`}>
+        <HistoryList
+          items={history.map(toHistoryItem)}
+          emptyTitle="Todavía no hay cambios este mes"
+          emptyHint="Cada vez que crees, edites o elimines un presupuesto va a quedar registrado acá."
+        />
       </Card>
 
       {open && (

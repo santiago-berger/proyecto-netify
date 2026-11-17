@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Plus, Trash2, PiggyBank, CircleDollarSign, Pencil, MinusCircle, Star } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Plus, Trash2, PiggyBank, CircleDollarSign, Pencil, MinusCircle, PlusCircle, Star, History } from "lucide-react";
 import { api } from "../api/api.js";
 import { Card } from "../components/ui/Card.jsx";
 import { Amount } from "../components/ui/Amount.jsx";
@@ -7,7 +7,30 @@ import { Spinner } from "../components/ui/Spinner.jsx";
 import { Empty } from "../components/ui/Empty.jsx";
 import { Modal } from "../components/ui/Modal.jsx";
 import { Field } from "../components/ui/Field.jsx";
-import { todayISO } from "../utils/format.js";
+import { HistoryList } from "../components/ui/HistoryList.jsx";
+import { todayISO, longDate, dateTime } from "../utils/format.js";
+
+// un aporte o retiro -> fila de la lista del historial
+const toHistoryItem = (m) => {
+  const deposit = m.type === "deposit";
+  return {
+    key: m.id,
+    icon: deposit ? PlusCircle : MinusCircle,
+    tone: deposit ? "ok" : "warn",
+    title: `${deposit ? "Aporte a" : "Retiro de"} “${m.goal.name}”`,
+    sub: (
+      <>
+        {longDate(m.date)} · Saldo de la meta: <Amount value={m.balance_after} />
+        <span className="history-registered"> · Registrado el {dateTime(m.registered_at)}</span>
+      </>
+    ),
+    right: (
+      <span className={`num history-amount ${deposit ? "text-ok" : "text-warn"}`}>
+        {deposit ? "+" : "−"}<Amount value={m.amount} />
+      </span>
+    ),
+  };
+};
 import { useAuth } from "../context/AuthContext.jsx";
 import { getPreference, savePreference } from "../utils/preferences.js";
 
@@ -25,11 +48,27 @@ export default function Goals() {
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState(null); // mensaje de avance tras un aporte
+  const [history, setHistory] = useState([]);
+  const [historyGoal, setHistoryGoal] = useState(""); // "" = todas las metas
+  const historyRef = useRef(null);
+
+  const loadHistory = async () => {
+    const { data } = await api.get("/goals/history");
+    setHistory(data);
+  };
 
   const load = async () => {
-    const { data } = await api.get("/goals");
+    const [{ data }] = await Promise.all([api.get("/goals"), loadHistory()]);
     setGoals(data);
+    // si la meta filtrada se eliminó, el historial vuelve a mostrar todas
+    setHistoryGoal((current) => (data.some((g) => String(g.id) === current) ? current : ""));
     setLoading(false);
+  };
+
+  // botón de historial de cada meta: filtra la lista y la lleva a la vista
+  const showGoalHistory = (id) => {
+    setHistoryGoal(String(id));
+    historyRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
   useEffect(() => { load(); }, []);
 
@@ -88,7 +127,7 @@ export default function Goals() {
       });
       setOpenContrib(null);
       setContrib({ amount: "", date: todayISO() });
-      const { data } = await api.get("/goals");
+      const [{ data }] = await Promise.all([api.get("/goals"), loadHistory()]);
       setGoals(data);
       // busca la meta actualizada para informar el avance
       const g = data.find((x) => x.id === goalId);
@@ -126,7 +165,7 @@ export default function Goals() {
   };
 
   const remove = async (id) => {
-    if (!confirm("¿Eliminar esta meta?")) return;
+    if (!confirm("¿Eliminar esta meta? También se va a borrar su historial de aportes y retiros.")) return;
     await api.delete(`/goals/${id}`);
     await load();
   };
@@ -176,6 +215,8 @@ export default function Goals() {
                       title={featuredId === g.id ? "Quitar del resumen" : "Mostrar en el resumen"}>
                       <Star size={13} fill={featuredId === g.id ? "currentColor" : "none"} />
                     </button>
+                    <button className="btn btn-ghost btn-sm" onClick={() => showGoalHistory(g.id)} style={{ padding: 6 }}
+                      title="Ver historial de aportes y retiros" aria-label={`Ver historial de ${g.name}`}><History size={13} /></button>
                     <button className="btn btn-ghost btn-sm" onClick={() => openEdit(g)} style={{ padding: 6 }} title="Editar meta"><Pencil size={13} /></button>
                     <button className="btn btn-danger btn-sm" onClick={() => remove(g.id)} style={{ padding: 6 }}><Trash2 size={13} /></button>
                   </div>
@@ -198,6 +239,29 @@ export default function Goals() {
           </div>
         )}
       </Card>
+
+      {goals.length > 0 && (
+        <div ref={historyRef} style={{ scrollMarginTop: 16 }}>
+          <Card
+            title="Historial de movimientos"
+            sub="Aportes y retiros de tus metas, del más reciente al más antiguo"
+            action={
+              <select className="select history-filter" value={historyGoal} onChange={(e) => setHistoryGoal(e.target.value)}
+                aria-label="Filtrar el historial por meta">
+                <option value="">Todas las metas</option>
+                {goals.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
+              </select>
+            }
+          >
+            <HistoryList
+              key={historyGoal} // al cambiar el filtro vuelve a mostrar solo los primeros registros
+              items={history.filter((m) => !historyGoal || String(m.goal.id) === historyGoal).map(toHistoryItem)}
+              emptyTitle="Todavía no hay movimientos"
+              emptyHint="Cuando agregues un aporte o retires dinero de una meta, va a quedar registrado acá."
+            />
+          </Card>
+        </div>
+      )}
 
       {openNew && (
         <Modal title={editingGoal ? "Editar meta de ahorro" : "Nueva meta de ahorro"} onClose={() => setOpenNew(false)}>
