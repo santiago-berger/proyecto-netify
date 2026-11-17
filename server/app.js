@@ -17,6 +17,7 @@ import { articleRouter } from "./src/routes/article.routes.js";
 import { favoriteRouter } from "./src/routes/favorite.routes.js";
 import { reminderRouter } from "./src/routes/reminder.routes.js";
 import { notificationRouter } from "./src/routes/notification.routes.js";
+import { loanRouter } from "./src/routes/loan.routes.js";
 
 dotenv.config();
 
@@ -46,6 +47,7 @@ app.use("/api", articleRouter);
 app.use("/api", favoriteRouter);
 app.use("/api", reminderRouter);
 app.use("/api", notificationRouter);
+app.use("/api", loanRouter);
 
 app.listen(PORT, async () => {
   await connectDB();
