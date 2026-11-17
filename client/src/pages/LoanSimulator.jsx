@@ -1,185 +1,346 @@
-import { useState, useMemo, useEffect } from "react";
-import { Plus, Trash2, Calculator, Trophy, Info, RotateCcw } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
+import { HelpCircle, Check, AlertTriangle, Minus, UserRound, RefreshCw, Landmark } from "lucide-react";
+import { api } from "../api/api.js";
 import { Card } from "../components/ui/Card.jsx";
 import { Amount } from "../components/ui/Amount.jsx";
 import { Field } from "../components/ui/Field.jsx";
+import { Spinner } from "../components/ui/Spinner.jsx";
+import { Empty } from "../components/ui/Empty.jsx";
+import { CftLink } from "../components/loans/CftLink.jsx";
+import { EligibilityBadge } from "../components/loans/EligibilityBadge.jsx";
+import { LoanDisclaimer, datesByEntity } from "../components/loans/LoanDisclaimer.jsx";
+import { DataNotices } from "../components/loans/DataNotices.jsx";
+import { IncomeUsed } from "../components/loans/IncomeUsed.jsx";
+import { money } from "../utils/format.js";
+import { PERFIL_LABELS, clampTo, percent, plural, simulationQuery } from "../utils/loans.js";
 
 /*
-  Simulador de préstamos (sistema francés, cuota fija).
-  Fórmula de la cuota:  cuota = C * i / (1 - (1 + i)^-n)
-    C = capital,  i = tasa mensual (TNA/12),  n = cantidad de cuotas
-  Los escenarios los carga el usuario (nombre + TNA + plazo) y se ordenan
-  de MENOR a MAYOR costo total, como pide el requerimiento.
-  Las tasas son referenciales: el usuario debe confirmarlas con cada entidad.
+  Simulador de préstamos personales con datos del BCRA (Régimen de Transparencia).
+  - El usuario elige monto, plazo y tipo de beneficiario dentro de los RANGOS COMUNES
+    que devuelve el backend: así todos los préstamos del perfil tienen resultado.
+  - La tabla compara CFT, cuota estimada y costo total, de menor a mayor costo.
+  - Requisitos y condiciones de cada préstamo se ven en su mini página (botón "?").
+  - Los parámetros viven en la URL: volver desde el detalle conserva la simulación.
 */
 
-const calc = (capital, tna, meses) => {
-  const C = Number(capital);
-  const n = Number(meses);
-  const i = Number(tna) / 100 / 12;
-  if (!C || !n) return { cuota: 0, total: 0, interes: 0 };
-  const cuota = i === 0 ? C / n : (C * i) / (1 - Math.pow(1 + i, -n));
-  const total = cuota * n;
-  return { cuota, total, interes: total - C };
-};
+const DEFAULTS = { perfil: "dependencia", monto: 1000000, plazo: 24 };
 
-const uid = () => Math.random().toString(36).slice(2, 8);
-
-const LIMITS = { capital: 100000000, tna: 100, meses: 72 };
-
-// keeps an empty input editable; otherwise forces the value into [0, max]
-const clamp = (value, max) => {
-  if (value === "") return "";
-  const n = Number(value);
-  if (isNaN(n)) return 0;
-  return Math.min(Math.max(n, 0), max);
-};
-
-const clampScenario = (s) => ({ ...s, tna: clamp(s.tna, LIMITS.tna), meses: clamp(s.meses, LIMITS.meses) });
-
-const DEFAULT_SCENARIOS = [
-  { id: uid(), name: "Banco A", tna: 60, meses: 12 },
-  { id: uid(), name: "Banco B", tna: 80, meses: 12 },
-  { id: uid(), name: "Financiera", tna: 95, meses: 18 },
-];
+// compara parámetros por valor, sin importar el orden en que estén en la URL
+const sameParams = (a, b) =>
+  JSON.stringify(Object.entries(a).sort()) === JSON.stringify(Object.entries(b).sort());
 
 export default function LoanSimulator() {
-  // los datos se guardan en el navegador para no perderlos al recargar
-  const [capital, setCapital] = useState(() => {
-    const g = localStorage.getItem("simulador_capital");
-    return g ? clamp(g, LIMITS.capital) : 500000;
-  });
-  const [scenarios, setScenarios] = useState(() => {
-    const g = localStorage.getItem("simulador_escenarios");
-    return g ? JSON.parse(g).map(clampScenario) : DEFAULT_SCENARIOS;
-  });
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [catalog, setCatalog] = useState(null);
+  const [catalogError, setCatalogError] = useState(null);
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  useEffect(() => {
-    localStorage.setItem("simulador_capital", String(capital));
-  }, [capital]);
-  useEffect(() => {
-    localStorage.setItem("simulador_escenarios", JSON.stringify(scenarios));
-  }, [scenarios]);
+  const loadCatalog = async () => {
+    setCatalogError(null);
+    try {
+      const { data } = await api.get("/loans/catalog");
+      setCatalog(data);
+    } catch (err) {
+      setCatalogError(err.response?.data?.message || "No pudimos cargar los préstamos. Probá de nuevo en unos minutos.");
+    }
+  };
+  useEffect(() => { loadCatalog(); }, []);
 
-  const reset = () => {
-    localStorage.removeItem("simulador_capital");
-    localStorage.removeItem("simulador_escenarios");
-    setCapital(500000);
-    setScenarios(DEFAULT_SCENARIOS.map((s) => ({ ...s, id: uid() })));
+  // parámetros actuales (la URL es la fuente de verdad)
+  const perfiles = catalog?.perfiles ?? [];
+  const perfil = perfiles.some((p) => p.clave === searchParams.get("perfil")) ? searchParams.get("perfil") : DEFAULTS.perfil;
+  const rangos = perfiles.find((p) => p.clave === perfil)?.rangos ?? null;
+  const monto = Number(searchParams.get("monto"));
+  const plazo = Number(searchParams.get("plazo"));
+  const entidad = searchParams.get("entidad") ?? "";
+
+  // el texto del input de monto va aparte para poder tipear valores intermedios
+  const [montoText, setMontoText] = useState(searchParams.get("monto") ?? "");
+
+  // bancos con algún préstamo para el perfil elegido (para el desplegable)
+  const entidadesDelPerfil = useMemo(
+    () =>
+      (catalog?.entidades ?? []).filter((e) =>
+        e.prestamos.some((p) => p.beneficiario.clave === "todos" || p.beneficiario.clave === perfil)
+      ),
+    [catalog, perfil]
+  );
+
+  // lleva los parámetros de la URL a valores válidos para el perfil (al cargar y al cambiar de perfil)
+  useEffect(() => {
+    if (!rangos) return;
+    const next = {
+      perfil,
+      monto: String(clampTo(monto > 0 ? monto : DEFAULTS.monto, rangos.monto)),
+      plazo: String(clampTo(Number.isInteger(plazo) && plazo > 0 ? plazo : DEFAULTS.plazo, rangos.plazoMeses)),
+    };
+    if (entidad && entidadesDelPerfil.some((e) => String(e.codigo) === entidad)) next.entidad = entidad;
+
+    if (!sameParams(Object.fromEntries(searchParams.entries()), next)) {
+      setSearchParams(next, { replace: true });
+      setMontoText(next.monto);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rangos, perfil, entidadesDelPerfil]);
+
+  const updateParams = (changes) => {
+    const next = { perfil, monto: String(monto), plazo: String(plazo), ...(entidad && { entidad }), ...changes };
+    if (!next.entidad) delete next.entidad;
+    setSearchParams(next, { replace: true });
   };
 
-  const results = useMemo(() => {
-    return scenarios
-      .map((s) => ({ ...s, ...calc(capital, s.tna, s.meses) }))
-      .sort((a, b) => a.total - b.total);
-  }, [scenarios, capital]);
+  const montoError =
+    rangos && montoText !== String(monto)
+      ? `Ingresá un monto entre ${money(rangos.monto.minimo)} y ${money(rangos.monto.maximo)}`
+      : null;
 
-  const best = results[0];
-
-  const update = (id, key, value) => {
-    const next = key in LIMITS ? clamp(value, LIMITS[key]) : value;
-    setScenarios((arr) => arr.map((s) => (s.id === id ? { ...s, [key]: next } : s)));
+  const onMontoChange = (value) => {
+    setMontoText(value);
+    const n = Number(value);
+    // solo se simula con un monto válido; si no, queda el error en el campo y la última simulación
+    if (value !== "" && n >= rangos.monto.minimo && n <= rangos.monto.maximo) updateParams({ monto: String(n) });
   };
-  const add = () =>
-    setScenarios((arr) => [...arr, { id: uid(), name: `Opción ${arr.length + 1}`, tna: 100, meses: 12 }]);
-  const remove = (id) => setScenarios((arr) => arr.filter((s) => s.id !== id));
+
+  const paramsReady =
+    rangos &&
+    searchParams.get("perfil") === perfil &&
+    monto >= rangos.monto.minimo && monto <= rangos.monto.maximo &&
+    plazo >= rangos.plazoMeses.minimo && plazo <= rangos.plazoMeses.maximo;
+  const query = paramsReady ? simulationQuery({ monto, plazo, perfil, entidad }) : null;
+
+  // simula cada vez que cambian los parámetros (con una pequeña espera mientras se tipea o se arrastra)
+  useEffect(() => {
+    if (!query) return;
+    let active = true;
+    setLoading(true);
+    const timer = setTimeout(async () => {
+      try {
+        const { data } = await api.get(`/loans/simulate?${query}`);
+        if (!active) return;
+        setResult(data);
+        setError(null);
+      } catch (err) {
+        if (active) setError(err.response?.data?.message || "No pudimos simular los préstamos. Probá de nuevo en unos minutos.");
+      } finally {
+        if (active) setLoading(false);
+      }
+    }, 250);
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
+  }, [query]);
+
+  if (catalogError) {
+    return (
+      <div className="page-grid">
+        <Header />
+        <Card>
+          <Empty icon={Landmark} title="Los datos del BCRA no están disponibles" hint={catalogError} />
+          <div className="flex" style={{ justifyContent: "center" }}>
+            <button className="btn btn-primary btn-sm" onClick={loadCatalog}><RefreshCw size={14} /> Reintentar</button>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+  if (!catalog || !rangos) return <Spinner />;
+
+  const rows = result?.resultados ?? [];
+  const bancos = catalog.entidades.filter((e) => e.disponible).map((e) => e.nombre);
+
+  /*
+    Las filas siguen ordenadas por costo total; solo cambia qué fila se destaca:
+    - menorCosto: la más barata (lo que se destacaba antes)
+    - recomendado: la más barata que el usuario cumple según su ingreso (la primera con ✓)
+    Con una sola fila no hay nada que comparar y no se destaca ninguna.
+  */
+  const ingresoCargado = Boolean(result?.usuario.ingresoCargado);
+  const comparando = rows.length > 1;
+  const menorCosto = comparando ? rows[0] : null;
+  const recomendado = comparando && ingresoCargado ? rows.find((r) => r.cumpleRequisitosDeIngreso === true) ?? null : null;
+  const ningunoCumple = ingresoCargado && rows.length > 0 && rows.every((r) => r.cumpleRequisitosDeIngreso === false);
+  const describe = (r) => `${r.entidad.nombre} · ${r.nombre}${r.canal ? ` (${r.canal})` : ""}`;
 
   return (
     <div className="page-grid">
-      <div>
-        <h2 style={{ fontSize: 20, marginBottom: 4 }}>Simulador de préstamos</h2>
-        <p className="muted" style={{ marginTop: 0 }}>
-          Cargá el monto que necesitás y compará distintas opciones. Se ordenan
-          automáticamente de <b>menor a mayor costo total</b>.
-        </p>
-      </div>
+      <Header bancos={bancos} />
 
       <Card>
-        <div className="grid-2" style={{ alignItems: "end", gap: 0, gridColumnGap: 18 }}>
-          <Field label="¿Cuánto querés pedir? (hasta $100.000.000)">
-            <input className="input" type="number" min="0" max={LIMITS.capital} value={capital}
-              onChange={(e) => setCapital(clamp(e.target.value, LIMITS.capital))} placeholder="0" />
+        <div className="sim-form">
+          <Field label="¿Cuánto querés pedir?" error={montoError}>
+            <input className="input" type="number" inputMode="numeric" min={rangos.monto.minimo} max={rangos.monto.maximo}
+              value={montoText} onChange={(e) => onMontoChange(e.target.value)} aria-describedby="monto-hint" />
+            {!montoError && (
+              <span className="field-hint" id="monto-hint">
+                Entre {money(rangos.monto.minimo)} y {money(rangos.monto.maximo)}
+              </span>
+            )}
           </Field>
-          <div style={{ marginBottom: 14 }} className="flex gap">
-            <button className="btn btn-ghost btn-sm" onClick={add}><Plus size={15} /> Agregar opción</button>
-            <button className="btn btn-ghost btn-sm" onClick={reset} title="Volver a los valores por defecto"><RotateCcw size={14} /> Reiniciar</button>
-          </div>
-        </div>
 
-        <div style={{ overflowX: "auto" }}>
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Opción</th>
-                <th>TNA (% máx. 100)</th>
-                <th>Plazo (meses, máx. 72)</th>
-                <th className="right">Cuota</th>
-                <th className="right">Costo total</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {scenarios.map((s) => {
-                const r = calc(capital, s.tna, s.meses);
-                return (
-                  <tr key={s.id}>
-                    <td style={{ minWidth: 120 }}>
-                      <input className="input" value={s.name}
-                        onChange={(e) => update(s.id, "name", e.target.value)} />
-                    </td>
-                    <td style={{ width: 100 }}>
-                      <input className="input" type="number" min="0" max={LIMITS.tna} value={s.tna}
-                        onChange={(e) => update(s.id, "tna", e.target.value)} />
-                    </td>
-                    <td style={{ width: 110 }}>
-                      <input className="input" type="number" min="0" max={LIMITS.meses} value={s.meses}
-                        onChange={(e) => update(s.id, "meses", e.target.value)} />
-                    </td>
-                    <td className="right num"><Amount value={r.cuota} /></td>
-                    <td className="right num"><Amount value={r.total} /></td>
-                    <td className="right">
-                      <button className="btn btn-danger btn-sm" onClick={() => remove(s.id)} style={{ padding: 7 }}>
-                        <Trash2 size={14} />
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          <Field label={`¿En cuántas cuotas? · ${plural(plazo || rangos.plazoMeses.minimo, "mes", "meses")}`}>
+            <input className="range" type="range" min={rangos.plazoMeses.minimo} max={rangos.plazoMeses.maximo} step="1"
+              value={plazo || rangos.plazoMeses.minimo} onChange={(e) => updateParams({ plazo: e.target.value })}
+              aria-valuetext={plural(plazo, "mes", "meses")} />
+            <div className="range-labels">
+              <span>{rangos.plazoMeses.minimo} meses</span>
+              <span>{rangos.plazoMeses.maximo} meses</span>
+            </div>
+          </Field>
+
+          <Field label="Tipo de beneficiario">
+            <div className="seg-control" role="radiogroup" aria-label="Tipo de beneficiario">
+              {perfiles.map((p) => (
+                <button key={p.clave} type="button" role="radio" aria-checked={p.clave === perfil}
+                  onClick={() => p.clave !== perfil && updateParams({ perfil: p.clave })}>
+                  {PERFIL_LABELS[p.clave] ?? p.descripcion}
+                </button>
+              ))}
+            </div>
+          </Field>
+
+          <Field label="Banco">
+            <select className="select" value={entidad} onChange={(e) => updateParams({ entidad: e.target.value })}>
+              <option value="">Todos los bancos</option>
+              {entidadesDelPerfil.map((e) => (
+                <option key={e.codigo} value={e.codigo}>{e.nombre}</option>
+              ))}
+            </select>
+          </Field>
         </div>
       </Card>
 
-      {best && best.total > 0 && (
-        <Card title="Ranking por costo total" sub="De la opción más conveniente a la más cara">
-          <div className="list">
-            {results.map((r, idx) => (
-              <div className="row" key={r.id}>
-                <div className="icon-badge" style={idx === 0 ? { background: "rgba(233,210,122,.1)", color: "var(--coin)" } : {}}>
-                  {idx === 0 ? <Trophy size={17} /> : <span className="num">{idx + 1}</span>}
-                </div>
-                <div className="grow">
-                  <div className="r-title">{r.name} {idx === 0 && <span className="chip coin" style={{ marginLeft: 6 }}>Más conveniente</span>}</div>
-                  <div className="r-sub">Cuota de <Amount value={r.cuota} /> · {r.meses} meses · TNA {r.tna}%</div>
-                </div>
-                <div className="right">
-                  <div className="num" style={{ fontWeight: 600 }}><Amount value={r.total} /></div>
-                  <div className="r-sub">Intereses: <Amount value={r.interes} /></div>
+      <DataNotices meta={result?.meta ?? catalog.meta} />
+
+      {result && !result.usuario.ingresoCargado && (
+        <div className="loan-notice info">
+          <UserRound size={15} aria-hidden="true" />
+          <div>
+            Cargá tu ingreso mensual en tu perfil para saber si cumplís los requisitos de cada préstamo.{" "}
+            <Link to="/perfil">Ir a mi perfil</Link>
+          </div>
+        </div>
+      )}
+
+      <Card
+        title="Comparación de préstamos"
+        sub={`${money(monto)} a ${plural(plazo, "mes", "meses")} · de menor a mayor costo total`}
+        className={`loan-results ${loading ? "is-loading" : ""}`}
+      >
+        {error ? (
+          <Empty icon={Landmark} title="No pudimos simular los préstamos" hint={error} />
+        ) : !result ? (
+          <Spinner />
+        ) : rows.length === 0 ? (
+          <Empty icon={Landmark} title="No hay préstamos para mostrar" hint="Probá con otro banco o tipo de beneficiario." />
+        ) : (
+          <>
+            {ingresoCargado && <IncomeUsed ingreso={result.usuario.ingresoMensual} />}
+            {recomendado && (
+              <div className="loan-notice info loan-summary">
+                <Check size={15} aria-hidden="true" />
+                <div>
+                  Con tu ingreso, el préstamo más conveniente al que accedés es <b>{describe(recomendado)}</b>.
                 </div>
               </div>
-            ))}
-          </div>
+            )}
+            {ningunoCumple && (
+              <div className="loan-notice loan-summary">
+                <AlertTriangle size={15} aria-hidden="true" />
+                <div>
+                  Con tu ingreso no cumplís los requisitos de {rows.length === 1 ? "este préstamo" : "ninguno de estos préstamos"} con
+                  este monto y plazo. Probá con un plazo mayor o un monto menor.
+                </div>
+              </div>
+            )}
 
-          <div className="mt flex gap" style={{ alignItems: "flex-start", color: "var(--muted)", fontSize: 12.5 }}>
-            <Info size={15} style={{ flexShrink: 0, marginTop: 1 }} />
-            <span>
-              El cálculo usa el sistema francés de cuota fija sobre la TNA que ingreses.
-              Las tasas son referenciales y de carga manual: confirmá siempre el CFT
-              (Costo Financiero Total) real con cada entidad antes de tomar un préstamo.
-            </span>
-          </div>
-        </Card>
+            <div style={{ overflowX: "auto" }}>
+              <table className="table loan-table">
+                <thead>
+                  <tr>
+                    <th>Banco · Préstamo</th>
+                    <th className="right"><CftLink /></th>
+                    <th className="right">Cuota estimada</th>
+                    <th className="right">Costo total</th>
+                    <th><span className="sr-only">Detalles</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((r) => (
+                    <tr key={r.id} className={r === recomendado ? "recommended" : ""}>
+                      <td>
+                        <div className="loan-name">
+                          <EligibilityBadge value={r.cumpleRequisitosDeIngreso} />
+                          <div>
+                            <div className="r-title">
+                              {r.entidad.nombre}
+                              {r === recomendado && (
+                                <span className="chip teal loan-chip"
+                                  title="Según tu ingreso. La antigüedad laboral y la edad se confirman con el banco.">
+                                  Más conveniente para vos
+                                </span>
+                              )}
+                              {r === menorCosto && r !== recomendado && (
+                                <span className="chip coin loan-chip subtle" title="El préstamo con el menor costo total">
+                                  Menor costo
+                                </span>
+                              )}
+                            </div>
+                            <div className="r-sub">{r.nombre}{r.canal && ` · ${r.canal}`}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="right num">{percent(r.cft)}</td>
+                      <td className="right num"><Amount value={r.calculo.cuotaMensual} /></td>
+                      <td className="right num" style={{ fontWeight: 600 }}><Amount value={r.calculo.costoTotal} /></td>
+                      <td className="right">
+                        <Link to={`/simulador/${r.id}?${query}`} className="details-btn" data-tip="Ver detalles"
+                          aria-label={`Ver detalles de ${r.entidad.nombre}: ${r.nombre}${r.canal ? ` (${r.canal})` : ""}`}>
+                          <HelpCircle size={16} aria-hidden="true" />
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="loan-legend">
+              <span><span className="elig-badge ok"><Check size={11} strokeWidth={2.5} /></span> Cumplís los requisitos de ingreso</span>
+              <span><span className="elig-badge warn"><AlertTriangle size={11} strokeWidth={2.5} /></span> No cumplís alguno</span>
+              {!result.usuario.ingresoCargado && (
+                <span><span className="elig-badge neutral"><Minus size={11} strokeWidth={2.5} /></span> Sin ingreso cargado</span>
+              )}
+              <span><HelpCircle size={14} /> Requisitos y condiciones de cada préstamo</span>
+            </div>
+            <p className="field-hint" style={{ margin: "10px 0 0" }}>
+              La cuota se estima con el CFT máximo que informa cada banco, en el sistema francés de cuota fija.
+            </p>
+          </>
+        )}
+      </Card>
+
+      {result && (
+        <LoanDisclaimer
+          disclaimer={result.meta.disclaimer}
+          fechas={datesByEntity(rows)}
+          umbralDias={result.meta.umbralDesactualizadoDias}
+        />
       )}
     </div>
   );
 }
+
+const Header = ({ bancos = [] }) => (
+  <div>
+    <h2 style={{ fontSize: 20, marginBottom: 4 }}>Simulador de préstamos</h2>
+    <p className="muted" style={{ marginTop: 0 }}>
+      Compará préstamos personales
+      {bancos.length > 0 && <> de {bancos.slice(0, -1).join(", ")}{bancos.length > 1 && " y "}{bancos.at(-1)}</>}{" "}
+      con los datos oficiales que cada banco informa al BCRA.
+    </p>
+  </div>
+);

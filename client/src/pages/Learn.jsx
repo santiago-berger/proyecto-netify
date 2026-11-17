@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { BookOpen, Star, ArrowLeft } from "lucide-react";
 import { api } from "../api/api.js";
 import { Card } from "../components/ui/Card.jsx";
@@ -6,11 +7,16 @@ import { Spinner } from "../components/ui/Spinner.jsx";
 import { Empty } from "../components/ui/Empty.jsx";
 
 export default function Learn() {
+  // cada artículo tiene su propia URL (/aprender/:id) para poder enlazarlo desde otras secciones
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [loading, setLoading] = useState(true);
   const [articles, setArticles] = useState([]);
   const [favorites, setFavorites] = useState([]);
   const [topic, setTopic] = useState("Todos");
   const [selected, setSelected] = useState(null);
+  const [notFound, setNotFound] = useState(false);
   const [tab, setTab] = useState("todos"); // todos | favoritos
 
   const load = async () => {
@@ -23,10 +29,31 @@ export default function Learn() {
 
   const topics = ["Todos", ...Array.from(new Set(articles.map((a) => a.topic)))];
 
-  const openArticle = async (id) => {
-    const { data } = await api.get(`/articles/${id}`);
-    setSelected(data);
-  };
+  // abre el artículo de la URL (o vuelve a la lista si no hay :id)
+  useEffect(() => {
+    let active = true;
+    setNotFound(false);
+    if (!id) {
+      setSelected(null);
+      return;
+    }
+    api
+      .get(`/articles/${id}`)
+      .then(({ data }) => active && setSelected(data))
+      .catch(() => {
+        if (!active) return;
+        setSelected(null);
+        setNotFound(true);
+      });
+    return () => {
+      active = false;
+    };
+  }, [id]);
+
+  const openArticle = (articleId) => navigate(`/aprender/${articleId}`);
+
+  // si se llegó desde otra sección (ej. el simulador), "Volver" regresa ahí
+  const goBack = () => (location.key !== "default" ? navigate(-1) : navigate("/aprender"));
 
   const toggleFav = async (id) => {
     if (favorites.includes(id)) {
@@ -38,12 +65,25 @@ export default function Learn() {
     }
   };
 
-  if (loading) return <Spinner />;
+  if (loading || (id && !selected && !notFound)) return <Spinner />;
+
+  if (notFound) {
+    return (
+      <div className="page-grid">
+        <button className="btn btn-ghost btn-sm" onClick={goBack} style={{ width: "fit-content" }}>
+          <ArrowLeft size={15} /> Volver
+        </button>
+        <Card>
+          <Empty icon={BookOpen} title="No encontramos este artículo" hint="Puede que se haya eliminado." />
+        </Card>
+      </div>
+    );
+  }
 
   if (selected) {
     return (
       <div className="page-grid">
-        <button className="btn btn-ghost btn-sm" onClick={() => setSelected(null)} style={{ width: "fit-content" }}>
+        <button className="btn btn-ghost btn-sm" onClick={goBack} style={{ width: "fit-content" }}>
           <ArrowLeft size={15} /> Volver
         </button>
         <Card>

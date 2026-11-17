@@ -69,6 +69,15 @@ const ARTICLES = [
       "Cuando pedís un préstamo vas a ver tres siglas. La TNA (Tasa Nominal Anual) es la tasa de interés 'de referencia': se divide por 12 para calcular el interés de cada mes, pero no tiene en cuenta que los intereses se van acumulando. La TEA (Tasa Efectiva Anual) sí lo considera, por eso siempre es mayor que la TNA y muestra mejor cuánto interés pagás en un año. El CFT (Costo Financiero Total) es el número más completo: además de los intereses suma impuestos como el IVA, comisiones, gastos de otorgamiento y seguros. Las entidades están obligadas a informarlo. Para comparar dos préstamos, mirá siempre el CFT: un préstamo con TNA más baja puede terminar siendo más caro si tiene muchos cargos extra.",
   },
   {
+    // el simulador de préstamos enlaza este artículo por su título (client/src/utils/loans.js)
+    title: "Qué es el CFT y cómo funciona",
+    summary:
+      "El indicador que reúne todo lo que pagás por un préstamo y por qué es el que tenés que mirar para comparar.",
+    topic: "Préstamos",
+    content:
+      "El CFT (Costo Financiero Total) expresa en una sola tasa anual todo lo que te cuesta un préstamo: los intereses, el IVA sobre esos intereses, las comisiones, los gastos de otorgamiento y los seguros que te cobren. Las entidades están obligadas a informarlo en sus publicidades y contratos, y también lo publican en el Régimen de Transparencia del BCRA, que es de donde lo toma nuestro simulador. Funciona como una tasa efectiva: tiene en cuenta que los costos se acumulan mes a mes, por eso siempre es mayor que la TEA, que solo mide los intereses. Para estimar la cuota, el simulador convierte el CFT anual en su equivalente mensual (por ejemplo, un CFT de 129% anual equivale a cerca de 7,2% por mes) y lo aplica con el sistema francés de cuota fija; multiplicando esa cuota por la cantidad de meses obtenés el costo total. Al comparar préstamos, mirá siempre el CFT y no la TNA: una tasa de interés baja con muchos cargos puede terminar costando más. Tené en cuenta que el CFT publicado es un valor máximo: la entidad puede ofrecerte uno menor según tu perfil, así que confirmalo siempre antes de firmar.",
+  },
+  {
     title: "Sistema francés: cómo se arma la cuota de tu préstamo",
     summary:
       "Por qué la cuota es siempre igual y qué parte de ella es interés y qué parte es capital.",
