@@ -22,10 +22,8 @@ export default function Register() {
     setGeneral("");
     setLoading(true);
     try {
-      await register({
-        ...form,
-        monthly_income: form.monthly_income ? Number(form.monthly_income) : 0,
-      });
+      // el ingreso se envía tal cual: el backend valida que esté cargado y sea mayor a 0
+      await register(form);
       // inicia sesión automáticamente tras registrarse
       await login(form.username, form.password);
       navigate("/");
@@ -78,7 +76,8 @@ export default function Register() {
               <input className="input" type="password" value={form.password} onChange={set("password")} placeholder="mínimo 6" />
             </Field>
             <Field label="Ingreso mensual" error={errors.monthly_income}>
-              <input className="input" type="number" value={form.monthly_income} onChange={set("monthly_income")} placeholder="opcional" />
+              <input className="input" type="number" min="1" inputMode="numeric" value={form.monthly_income}
+                onChange={set("monthly_income")} placeholder="Ej: 850000" />
             </Field>
           </div>
 

@@ -36,9 +36,12 @@ export const registerValidation = [
     .notEmpty().withMessage("El apellido es obligatorio")
     .isLength({ min: 2, max: 50 }).withMessage("El apellido debe tener entre 2 y 50 caracteres"),
 
+  // obligatorio: lo usa el simulador de préstamos para evaluar los requisitos de cada banco
   body("monthly_income")
-    .optional()
-    .isFloat({ min: 0 }).withMessage("El ingreso mensual debe ser un número positivo"),
+    .notEmpty().withMessage("El ingreso mensual es obligatorio")
+    .bail()
+    .isFloat({ gt: 0 }).withMessage("El ingreso mensual debe ser un número mayor a 0")
+    .toFloat(),
 ];
 
 export const loginValidation = [
@@ -53,9 +56,10 @@ export const updateProfileValidation = [
   body("last_name")
     .optional()
     .isLength({ min: 2, max: 50 }).withMessage("El apellido debe tener entre 2 y 50 caracteres"),
+  // si se envía, no puede quedar en 0 (sería lo mismo que no tenerlo cargado)
   body("monthly_income")
     .optional()
-    .isFloat({ min: 0 }).withMessage("El ingreso mensual debe ser un número positivo"),
+    .isFloat({ gt: 0 }).withMessage("El ingreso mensual debe ser un número mayor a 0"),
   body("avatar_url")
     .optional(),
   body("onboarded")
